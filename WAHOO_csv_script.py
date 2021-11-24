@@ -1,6 +1,7 @@
 import csv
 import osgeo.ogr as ogr
 import osgeo.osr as osr
+import datetime
 
 driver = ogr.GetDriverByName("ESRI Shapefile")
 data_source = driver.CreateDataSource(r"E:\UNI\Research_assistant\Shape files\Ride 3\Ride_3.shp")
@@ -45,6 +46,10 @@ with open(r"E:\UNI\Research_assistant\WAHOO files\Oct-31.csv") as csv_file:
                     speed = "0"
                 speed = float(speed)
                 time = float(time)
+                timestamp = datetime.datetime.fromtimestamp(time)
+                print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
+                print(type(timestamp.strftime('%M:%S')))
+
                 # create the feature
                 feature = ogr.Feature(layer.GetLayerDefn())
                 # Set the attributes using the values from the delimited text file
@@ -58,7 +63,7 @@ with open(r"E:\UNI\Research_assistant\WAHOO files\Oct-31.csv") as csv_file:
 
                 # create the WKT for the feature using Python string formatting
                 wkt = f"POINT({position_long_degrees} {position_lat_degrees})"
-                print("wkt: {}".format(wkt))
+                #print("wkt: {}".format(wkt))
 
                 # Create the point from the Well Known Txt
                 point = ogr.CreateGeometryFromWkt(wkt)
