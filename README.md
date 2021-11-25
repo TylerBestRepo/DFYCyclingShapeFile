@@ -105,10 +105,12 @@ Click the equation button, then the **Fields and Values** drop down then the att
 
 <img src="Screenshots/git-11.jpg" width = "500">
 
-The marker shape colour size, everything about it can be changed to represent the data best.
+The marker shape, colour, size, everything about it can be changed to best represent the data.
 
 <img src="Screenshots/git-12.jpg" width = "500">
 
 The new shapes and points will be placed behind the existing speed circles based on the postioning of the layers in the tab. 
 
 When doing rules more than one rule can be applied to a layer so no additional layers will be required to address data for rule-based markers.
+
+<img src="Screenshots/git-13.jpg" width = "500">
