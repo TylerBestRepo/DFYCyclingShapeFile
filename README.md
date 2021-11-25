@@ -18,14 +18,17 @@ To retrieve the files from the GPS plug it in using a USB-C cable and turn the d
 
 Alternatively the data can also be sent from the mobile phone the device is paired to by navigating to the ELEMNT app. Select the history tab and then choose the ride you wish to export. 
 
-![](Screenshots/1.png)
+<img src="Screenshots/1.jpg" width = "300">
 
-Select the kebab menu then choose **upload workout** ![Screenshot_20211125-063522_ELEMNT](https://user-images.githubusercontent.com/93167220/143326820-08d7cce2-04e6-404f-8c2a-c64d9a8d9301.jpg)
+Select the kebab menu then choose **upload workout** 
+
+<img src="Screenshots/2.jpg" width = "300">
 
 Then select **Share file to...** 
-![Screenshot_20211125-063555_Android System](https://user-images.githubusercontent.com/93167220/143326981-af0eb845-7292-4a85-a618-dcfabcef097d.jpg)
 
-At this point you have many options to email the file or store it on a variety of different cloud storage options that are installed on the phone.
+<img src="Screenshots/4.jpg" width = "300">
+
+At this point you have many options to email the file or store it on a variety of different cloud storage options that are installed on the phone. Now you have a .fit file that reads as complete jargon so before anything useful can be done with it it must be converted into a readable csv file using Garmins APK.
 
 # Using the FIT SDK to convert to CSV files
 After unpacking the files there is only one file that needs to be used to convert to a .csv format. Navigate to the files you have unpacked and enter the java folder. There you will find many FitToCSV files however the required one is **FitToCSV.bat**. To easily convert a .fit file simply drag and drop a fit file onto the .bat file and a second file will be made in the .csv format. They dont even need to be in the same directory so it is encourage to leave them separated. 
