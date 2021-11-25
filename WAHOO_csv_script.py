@@ -20,13 +20,15 @@ layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Distance", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Cadence", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
+layer.CreateField(ogr.FieldDefn("Time", ogr.OFTReal))
 
 # Save and close the data source
 
-with open(r"E:\UNI\Research_assistant\WAHOO files\Oct-31.csv") as csv_file:
+with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.csv") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     for row in csv_reader:
         if row[2] == 'record' and row[0] == 'Data' and len(row) > 20:
+            #indexes found manually or by using Finding_indexes.py
             position_lat_semi_circles = row[7]
             position_long_semi_circles = row[10]
             speed = row[28]
@@ -42,24 +44,25 @@ with open(r"E:\UNI\Research_assistant\WAHOO files\Oct-31.csv") as csv_file:
                 print(f"position_long_degrees: {position_long_degrees}\n")
                 print(f"Speed: {speed}\n")
                 #We want to convert speed from a string to a number value
-                if len(speed) < 1:
+                if len(speed) < 1: #Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
                     speed = "0"
                 speed = float(speed)
                 time = float(time)
-                timestamp = datetime.datetime.fromtimestamp(time)
-                print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
-                print(type(timestamp.strftime('%M:%S')))
+                timestamp = datetime.datetime.fromtimestamp(time) #This can output up to date time and year but for this we probably only need hours minutes seconds
+                #print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
+                time_variable = timestamp.strftime('%H:%M:%S')
+
 
                 # create the feature
                 feature = ogr.Feature(layer.GetLayerDefn())
                 # Set the attributes using the values from the delimited text file
                 feature.SetField("Speed", speed)
-                #feature.SetField("Time Elapsed", time)
                 feature.SetField("Latitude", position_lat_degrees)
                 feature.SetField("Longitude", position_long_degrees)
                 feature.SetField("Cadence", cadence)
                 feature.SetField("Distance", distance)
                 feature.SetField("Altitude", altitude)
+                feature.SetField("Time", time_variable)
 
                 # create the WKT for the feature using Python string formatting
                 wkt = f"POINT({position_long_degrees} {position_lat_degrees})"

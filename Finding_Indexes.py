@@ -22,5 +22,3 @@ with open(r"E:\UNI\Research_assistant\WAHOO files\Oct-31.csv") as csv_file:
 
     y = y+1
     print(f"Time index: {time_index}\nSpeed index: {speed_index}\nCadence index: {cadence_index}\nDistance index: {distance_index}\nAltitude index: {altitude_index}\n")
-    #print(f"cadence: {cadence_index}\n")
-    #print(f"number of loops: {y}")
