@@ -83,9 +83,9 @@ To view all of the relevant information at any given specific point can be found
 
 Currently this is just giving is information on the users route and nothing else. A lot more can be done with this software to visualise what happened on the ride, such as:
 
-Colour coding the points to represent something. For this example The points will be gradient colour coded based on the speed the user was travelling at.
+Colour coding the points to represent something. For this example the points will be gradient colour coded based on the speed the user was travelling at.
 
-Right click the shape files layer and click properties and you should be taken to "Symbology". From there click the drop down that currently reads "Single Symbol" and click **"Graduated"**.
+Right click the shape files layer and click properties and you should be taken to **"Symbology"**. From there click the drop down that currently reads "Single Symbol" and click **"Graduated"**.
 
 <img src="Screenshots/git-4-1.jpg" width = "800">
 
@@ -99,18 +99,28 @@ When analysing with graduated method only one value can be categorised. For any 
 
 For this new layer rules are going to be used to determine the visual identifiers. The same process as before applies, however, **"Rule-Based"** will be chosen instead of graduated. An empty rule will already exist. Double click the empty rule and choose a suitable name. This example will cover visual markers for when the cyclist stops.
 
-<img src="Screenshots/git-10.jpg" width = "500">
+<img src="Screenshots/git-10.jpg" width = "600">
 
 Click the equation button, then the **Fields and Values** drop down then the attribute variables can be double clicked to be referenced in the code area on the left.
 
-<img src="Screenshots/git-11.jpg" width = "500">
+<img src="Screenshots/git-11.jpg" width = "600">
 
 The marker shape, colour, size, everything about it can be changed to best represent the data.
 
-<img src="Screenshots/git-12.jpg" width = "500">
+<img src="Screenshots/git-12.jpg" width = "600">
 
 The new shapes and points will be placed behind the existing speed circles based on the postioning of the layers in the tab. 
 
 When doing rules more than one rule can be applied to a layer so no additional layers will be required to address data for rule-based markers.
 
-<img src="Screenshots/git-13.jpg" width = "500">
+<img src="Screenshots/git-13.jpg" width = "600">
+
+# Viewing more than one ride at a time
+
+Dozens of rides can be viewed at the same time to look for route overlaps or to keep everything in one window for ease of use. It's as simple as just dragging and dropping another shape file onto the screen to add another one.
+
+<img src="Screenshots/git-14.jpg" width = "600">
+
+The only problem is all of the rules applied to one layer do not automically apply to new layers input. Fortunately styles can be saved and loaded to eliminate repettious acts for many rides. If doing it for speed rules, two distinctly different rides might look like the same one if the start and or end points are the same as seen below.
+
+<img src="Screenshots/git-15.jpg" width = "450"> <img src="Screenshots/git-16.jpg" width = "450">
