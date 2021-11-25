@@ -95,6 +95,20 @@ Now any value can be chosen, and the size or colour of the points can determine 
 
 When analysing with graduated method only one value can be categorised. For any additional identifiers another instance of the ride shape file should be dragged in, given there being more than one instance of a layer, they should be grouped together to keep the layers neat and tidy. Naming and renaming these layers and groups is a good idea to keep track of everything going on.
 
-<img src="Screenshots/git-9.jpg" width = "250"> 
+<img src="Screenshots/git-9-1.jpg" width = "250"> 
 
+For this new layer rules are going to be used to determine the visual identifiers. The same process as before applies, however, **"Rule-Based"** will be chosen instead of graduated. An empty rule will already exist. Double click the empty rule and choose a suitable name. This example will cover visual markers for when the cyclist stops.
 
+<img src="Screenshots/git-10.jpg" width = "500">
+
+Click the equation button, then the **Fields and Values** drop down then the attribute variables can be double clicked to be referenced in the code area on the left.
+
+<img src="Screenshots/git-11.jpg" width = "500">
+
+The marker shape colour size, everything about it can be changed to represent the data best.
+
+<img src="Screenshots/git-12.jpg" width = "500">
+
+The new shapes and points will be placed behind the existing speed circles based on the postioning of the layers in the tab. 
+
+When doing rules more than one rule can be applied to a layer so no additional layers will be required to address data for rule-based markers.
