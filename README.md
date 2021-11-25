@@ -65,3 +65,12 @@ The location and name of the csv file should also be changed
 If the date is required as well as the time or in separate fields the syntax below can be used to retreive it:
 
 > print(timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+
+
+# Viewing in QGIS
+
+1. Open a new project.
+2. Drag "OpenStreetMap" under XYZ tiles to Layers and you will see a map of the world show up.
+
+
+3. Navigate to where you saved the shape files in your directory and drag the **xxx.shp** file onto the map.
