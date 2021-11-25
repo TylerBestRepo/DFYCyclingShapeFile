@@ -93,6 +93,8 @@ Now any value can be chosen, and the size or colour of the points can determine 
 
 <img src="Screenshots/git-5.jpg" width = "480"> <img src="Screenshots/git-6.jpg" width = "480">
 
-When analysing with graduated method only one value can be categorised. For any additional identifiers another instance of the ride shape file should be dragged in, given there being more than one instance of a layer, they should be grouped together to keep the layers neat and tidy.
+When analysing with graduated method only one value can be categorised. For any additional identifiers another instance of the ride shape file should be dragged in, given there being more than one instance of a layer, they should be grouped together to keep the layers neat and tidy. Naming and renaming these layers and groups is a good idea to keep track of everything going on.
 
-<img src="Screenshots/git-9.jpg" width = "800"> 
+<img src="Screenshots/git-9.jpg" width = "250"> 
+
+
