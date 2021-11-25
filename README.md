@@ -72,5 +72,9 @@ If the date is required as well as the time or in separate fields the syntax bel
 1. Open a new project.
 2. Drag "OpenStreetMap" under XYZ tiles to Layers and you will see a map of the world show up.
 
+<img src="Screenshots/git-1.jpg" width = "1000">
+3. Navigate to where you saved the shape files in your directory and drag the **xxx.shp** file onto the map. If still zoomed out dots should appear roughly in your position, zoom in to view the route that was taken on the ride.
 
-3. Navigate to where you saved the shape files in your directory and drag the **xxx.shp** file onto the map.
+<img src="Screenshots/git-2.jpg" width = "500">
+
+
