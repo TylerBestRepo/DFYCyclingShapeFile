@@ -123,4 +123,4 @@ Dozens of rides can be viewed at the same time to look for route overlaps or to 
 
 The only problem is all of the rules applied to one layer do not automically apply to new layers input. Fortunately styles can be saved and loaded to eliminate repettious acts for many rides. When the new shape file is added the saved style can be loaded and apllied efficiently. If doing it for speed rules, two distinctly different rides might look like the same one if the start and or end points are the same as seen below.
 
-<img src="Screenshots/git-15.jpg" width = "450"> <img src="Screenshots/git-16.jpg" width = "450">
+<img src="Screenshots/git-15.jpg" width = "400"> <img src="Screenshots/git-16.jpg" width = "550">
