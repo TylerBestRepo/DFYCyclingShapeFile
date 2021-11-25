@@ -77,6 +77,10 @@ If the date is required as well as the time or in separate fields the syntax bel
 
 <img src="Screenshots/git-2.jpg" width = "500"> <img src="Screenshots/git-3.jpg" width = "450"> 
 
+To view all of the relevant information at any given specific point can be found by zooming into a point selecting the "Identify Features" tool and clicking on a point.
+
+<img src="Screenshots/git-7.jpg" width = "500"> <img src="Screenshots/git-8.jpg" width = "500">
+
 Currently this is just giving is information on the users route and nothing else. A lot more can be done with this software to visualise what happened on the ride, such as:
 
 Colour coding the points to represent something. For this example The points will be gradient colour coded based on the speed the user was travelling at.
@@ -87,4 +91,4 @@ Right click the shape files layer and click properties and you should be taken t
 
 Now any value can be chosen, and the size or colour of the points can determine the scale. This instance speed and colour will be used with a colour ramp of Red-Green-Yellow, with red representing stopped and slow, green being average/median speed and yellow being maximum speed. Then choose around 20 classes to have a larger amount of buckets with smaller ranges and click classify.
 
-<img src="Screenshots/git-5.jpg" width = "500"> <img src="Screenshots/git-6.jpg" width = "800">
+<img src="Screenshots/git-5.jpg" width = "480"> <img src="Screenshots/git-6.jpg" width = "480">
