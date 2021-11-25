@@ -62,4 +62,6 @@ The location and name of the csv file should also be changed
 
 > with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.csv") as csv_file:
 
-print(timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+If the date is required as well as the time or in separate fields the syntax below can be used to retreive it:
+
+> print(timestamp.strftime('%Y-%m-%d %H:%M:%S'))
