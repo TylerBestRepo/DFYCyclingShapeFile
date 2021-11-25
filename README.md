@@ -37,3 +37,29 @@ After unpacking the files there is only one file that needs to be used to conver
 
 ![image](https://user-images.githubusercontent.com/93167220/143324603-b43b6121-df76-4f34-9181-52becfcd85e1.png)
 
+# Finding indexes script
+
+Firstly, ensure the directory is pointing to the correct csv file you are currently analysing.
+
+If any unexpected outputs are happening or errors it could be caused by index changes in the CSV, this is unlikely but in the event of it occurring the Finding_Indexes.py script should be run and the indexes for the metrics being pulled will be output to the console and the changes should be made in the man script. If any additional metrics are desired then they can easily be added by following the same syntax from the script and ensuring the spelling and capitalisation is the same as is in the csv file.
+
+# Main script
+
+As is, the main script outputs a shapefile with the following attributes:
+
++ Speed (meters/second)
++ Distance (meters)
++ Altitude (meters)
++ Time (Hours/Minutes/Seconds)
+
+All of this information is displayed in the console when the script is run to give real time feedback to determine if everything is behaving as it should so any necessary changes can be made with the index script.
+
+When running this script both the shape file output name and directory should be altered to wherever you want the shape files to be saved and what to call them:
+
+> data_source = driver.CreateDataSource(r"E:\UNI\Research_assistant\Shape files\Ride 3\Ride_3.shp")
+
+The location and name of the csv file should also be changed
+
+> with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.csv") as csv_file:
+
+print(timestamp.strftime('%Y-%m-%d %H:%M:%S'))
