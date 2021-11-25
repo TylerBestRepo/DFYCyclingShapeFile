@@ -84,3 +84,5 @@ Colour coding the points to represent something. For this example The points wil
 Right click the shape files layer and click properties and you should be taken to "Symbology". From there click the drop down that currently reads "Single Symbol" and click **"Graduated"**.
 
 <img src="Screenshots/git-4-1.jpg" width = "800">
+
+Now any value can be chosen, and the size or colour of the points can determine the scale. This instance speed and colour will be used with a colour ramp of Red-Green-Yellow, with red representing stopped and slow, green being average/median speed and yellow being maximum speed. Then choose around 20 classes to have a larger amount of buckets with smaller ranges and click classify.
