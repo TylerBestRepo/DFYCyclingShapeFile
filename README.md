@@ -73,8 +73,14 @@ If the date is required as well as the time or in separate fields the syntax bel
 2. Drag "OpenStreetMap" under XYZ tiles to Layers and you will see a map of the world show up.
 
 <img src="Screenshots/git-1.jpg" width = "1000">
-3. Navigate to where you saved the shape files in your directory and drag the **xxx.shp** file onto the map. If still zoomed out dots should appear roughly in your position, zoom in to view the route that was taken on the ride.
+3. Navigate to where you saved the shape files in your directory and drag the **xyz.shp** file onto the map. If still zoomed out dots should appear roughly in your position, zoom in to view the route that was taken on the ride.
 
-<img src="Screenshots/git-2.jpg" width = "500">
+<img src="Screenshots/git-2.jpg" width = "500"> <img src="Screenshots/git-3.jpg" width = "450"> 
 
+Currently this is just giving is information on the users route and nothing else. A lot more can be done with this software to visualise what happened on the ride, such as:
 
+Colour coding the points to represent something. For this example The points will be gradient colour coded based on the speed the user was travelling at.
+
+Right click the shape files layer and click properties and you should be taken to "Symbology". From there click the drop down that currently reads "Single Symbol" and click **"Graduated"**.
+
+<img src="Screenshots/git-4jpg" width = "1000">
