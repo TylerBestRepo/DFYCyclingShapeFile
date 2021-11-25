@@ -16,7 +16,9 @@ Navigate to settings in your Python IDE, then Project, then Python interpretor. 
 To retrieve the files from the GPS plug it in using a USB-C cable and turn the device on otherwise it will stay in charging mode. It will be called "MTP USB DEVIC", access internal storage and then the exports folder and there all of the recorded rides will be present. They are named by the date and time the rides were recorded. Copy and paste all rides to local storage for analysis.
 ![image](https://user-images.githubusercontent.com/93167220/143325560-3e26cfd6-073c-488a-a3fb-2be2d30da734.png)
 
-Alternatively the data can also be sent from the mobile phone the device is paired to by navigating to the ELEMNT app. Select the history tab and then choose the ride you wish to export. ![Screenshot_20211125-063501_ELEMNT](https://user-images.githubusercontent.com/93167220/143326749-ebcc0cfe-d202-434c-9740-cdf209819077.jpg)
+Alternatively the data can also be sent from the mobile phone the device is paired to by navigating to the ELEMNT app. Select the history tab and then choose the ride you wish to export. 
+
+![](Screenshots/1.png)
 
 Select the kebab menu then choose **upload workout** ![Screenshot_20211125-063522_ELEMNT](https://user-images.githubusercontent.com/93167220/143326820-08d7cce2-04e6-404f-8c2a-c64d9a8d9301.jpg)
 
