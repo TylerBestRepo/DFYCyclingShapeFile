@@ -83,4 +83,4 @@ Colour coding the points to represent something. For this example The points wil
 
 Right click the shape files layer and click properties and you should be taken to "Symbology". From there click the drop down that currently reads "Single Symbol" and click **"Graduated"**.
 
-<img src="Screenshots/git-4.jpg" width = "800">
+<img src="Screenshots/git-4-1.jpg" width = "800">
