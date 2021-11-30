@@ -40,9 +40,9 @@ with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.
             if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readigns
                 position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
                 position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
-                print(f"position_lat_degrees: {position_lat_degrees}")
-                print(f"position_long_degrees: {position_long_degrees}\n")
-                print(f"Speed: {speed}\n")
+                #print(f"position_lat_degrees: {position_lat_degrees}")
+                #print(f"position_long_degrees: {position_long_degrees}\n")
+                #print(f"Speed: {speed}\n")
                 #We want to convert speed from a string to a number value
                 if len(speed) < 1: #Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
                     speed = "0"
@@ -51,6 +51,8 @@ with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.
                 timestamp = datetime.datetime.fromtimestamp(time) #This can output up to date time and year but for this we probably only need hours minutes seconds
                 #print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
                 time_variable = timestamp.strftime('%H:%M:%S')
+
+                print(f"The file types is: {type(time_variable)}\n")
 
 
                 # create the feature
