@@ -11,6 +11,13 @@ It is necessary to use the QGIS Python otherwise the script would not be able to
 
 Navigate to settings in your Python IDE, then Project, then Python interpretor. A virtual environment is not required for this. Choose add interpretor next to the drop down and then choose system interpretor. You will then need to know where you installed QGIS to navigate to the necessary file. We are linking **python-qgis.bat** located in **OSGeo4W\bin** as seen below. This file links to the python as well as the necessary libraries. 
 
+# Installation for bat files on linux
+Installing QGIS first:
+https://qgis.org/en/site/forusers/alldownloads.html#debian-ubuntu
+Libraries and linking interpretor:
+https://haifengniu.com/post/how-to-set-environment-for-pyqgis-3-in-pycharm/
+
+
 ![image](https://user-images.githubusercontent.com/93167220/143323841-98ce157c-0c7d-4b88-a13d-fa9e1700e2f2.png)
 
 # Retrieving data from the WAHOO ELEMNT
