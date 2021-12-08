@@ -32,17 +32,18 @@ with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.
             position_lat_semi_circles = row[7]
             position_long_semi_circles = row[10]
             speed = row[28]
-            cadence = row[25]
+            #cadence = row[25]
             distance = row[22]
             altitude = row[16]
             time = row[4]
 
-            if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readigns
+            if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readings
                 position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
                 position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
-                #print(f"position_lat_degrees: {position_lat_degrees}")
-                #print(f"position_long_degrees: {position_long_degrees}\n")
-                #print(f"Speed: {speed}\n")
+                # Prints give visual feedback to know everything is being retrieved as we desire
+                print(f"position_lat_degrees: {position_lat_degrees}")
+                print(f"position_long_degrees: {position_long_degrees}\n")
+                print(f"Speed: {speed}\n")
                 #We want to convert speed from a string to a number value
                 if len(speed) < 1: #Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
                     speed = "0"
@@ -61,7 +62,7 @@ with open(r"E:\UNI\Research_assistant\Github download shape file creator\Oct-31.
                 feature.SetField("Speed", speed)
                 feature.SetField("Latitude", position_lat_degrees)
                 feature.SetField("Longitude", position_long_degrees)
-                feature.SetField("Cadence", cadence)
+                #feature.SetField("Cadence", cadence) # Cadence measurements probably wont be used as the measurement devices are too annoying to attach to the users bike
                 feature.SetField("Distance", distance)
                 feature.SetField("Altitude", altitude)
                 feature.SetField("Time", time_variable)
