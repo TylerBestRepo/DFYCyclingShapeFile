@@ -1,0 +1,45 @@
+{"start_time": 1.04, "end_time": "2.26", "sentence": "All right, Let's go.", "min_confidence": 0.6167}
+{"start_time": 3.84, "end_time": "4.16", "sentence": "Yeah.", "min_confidence": 0.7198}
+{"start_time": 10.44, "end_time": "10.87", "sentence": "Alright.", "min_confidence": 0.7222}
+{"start_time": 10.88, "end_time": "12.75", "sentence": "Slowly gaining speed.", "min_confidence": 0.9861}
+{"start_time": 14.84, "end_time": "15.16", "sentence": "Mhm.", "min_confidence": 0.3205}
+{"start_time": 17.84, "end_time": "19.81", "sentence": "Because I've got a little bit of a toe wind.", "min_confidence": 0.557}
+{"start_time": 19.82, "end_time": "21.17", "sentence": "Not a lot of headwinds.", "min_confidence": 0.9976}
+{"start_time": 22.84, "end_time": "29.71", "sentence": "It might be better going in the other direction, but there is just a little bit of wind along this section card.", "min_confidence": 0.5328}
+{"start_time": 29.71, "end_time": "30.64", "sentence": "All right, now up ahead.", "min_confidence": 0.376}
+{"start_time": 30.65, "end_time": "31.86", "sentence": "Just have to avoid that.", "min_confidence": 0.999}
+{"start_time": 32.54, "end_time": "32.75", "sentence": "Mhm.", "min_confidence": 0.4405}
+{"start_time": 33.91, "end_time": "34.52", "sentence": "Get ahead.", "min_confidence": 0.5944}
+{"start_time": 34.52, "end_time": "35.16", "sentence": "Check behind.", "min_confidence": 0.941}
+{"start_time": 35.16, "end_time": "40.73", "sentence": "Just to So whether there are any cars coming, she was okay on their sections.", "min_confidence": 0.5282}
+{"start_time": 41.08, "end_time": "44.85", "sentence": "Not a lot of Take it out.", "min_confidence": 0.2862}
+{"start_time": 45.24, "end_time": "53.66", "sentence": "Oh, I wouldn't want to be riding on here with my child, but nonetheless, it's all right at the moment.", "min_confidence": 0.4889}
+{"start_time": 54.14, "end_time": "55.85", "sentence": "A lot of cars around, which is good.", "min_confidence": 0.989}
+{"start_time": 57.04, "end_time": "57.25", "sentence": "Mhm.", "min_confidence": 0.3282}
+{"start_time": 57.64, "end_time": "59.32", "sentence": "Yeah.", "min_confidence": 0.7593}
+{"start_time": 60.54, "end_time": "63.79", "sentence": "Point feeling pretty secure through here.", "min_confidence": 0.6267}
+{"start_time": 63.8, "end_time": "66.85", "sentence": "No cars around at the moment.", "min_confidence": 0.8976}
+{"start_time": 67.74, "end_time": "71.76", "sentence": "Yeah, yeah, yeah.", "min_confidence": 0.6457}
+{"start_time": 72.44, "end_time": "73.55", "sentence": "Check behind.", "min_confidence": 0.9156}
+{"start_time": 73.55, "end_time": "73.86", "sentence": "Okay.", "min_confidence": 0.7366}
+{"start_time": 74.54, "end_time": "77.15", "sentence": "Not a lot of women to speak up just a little bit.", "min_confidence": 0.5663}
+{"start_time": 78.61, "end_time": "79.76", "sentence": "Yeah, Mhm.", "min_confidence": 0.5244}
+{"start_time": 81.24, "end_time": "84.26", "sentence": "Not a big fan of this section up through here.", "min_confidence": 0.9042}
+{"start_time": 85.44, "end_time": "89.77", "sentence": "Uh, potential the car opening car doors.", "min_confidence": 0.5905}
+{"start_time": 90.34, "end_time": "90.83", "sentence": "Ms.", "min_confidence": 0.3616}
+{"start_time": 90.84, "end_time": "94.15", "sentence": "Intersection feels a little dodgy.", "min_confidence": 0.952}
+{"start_time": 94.64, "end_time": "98.05", "sentence": "Yeah, clearing both ways.", "min_confidence": 0.5809}
+{"start_time": 98.74, "end_time": "100.45", "sentence": "Uh, clear to go straight.", "min_confidence": 0.9606}
+{"start_time": 101.46, "end_time": "106.04", "sentence": "And not a big fan of this part of the road is really narrow.", "min_confidence": 0.7879}
+{"start_time": 106.05, "end_time": "109.06", "sentence": "Coming up to a T intersection.", "min_confidence": 0.9896}
+{"start_time": 111.94, "end_time": "112.38", "sentence": "Yes.", "min_confidence": 0.5133}
+{"start_time": 113.64, "end_time": "120.43", "sentence": "Careful we were right next to a line of parked cars, and I feel really awful.", "min_confidence": 0.4476}
+{"start_time": 120.44, "end_time": "124.35", "sentence": "You just don't know when the car doors kind of click open.", "min_confidence": 0.5208}
+{"start_time": 125.04, "end_time": "130.25", "sentence": "Not a lot of traffic, but all it takes is for one car door to open.", "min_confidence": 0.8991}
+{"start_time": 130.26, "end_time": "131.03", "sentence": "That's it.", "min_confidence": 0.9945}
+{"start_time": 131.04, "end_time": "139.96", "sentence": "So we're right up through this area, this car coming out of the side road, and we're gonna stop and just check the audio.", "min_confidence": 0.6064}
+{"start_time": 141.24, "end_time": "141.45", "sentence": "Mhm.", "min_confidence": 0.6806}
+{"start_time": 143.35, "end_time": "143.86", "sentence": "Okay.", "min_confidence": 0.8677}
+{"start_time": 145.44, "end_time": "145.98", "sentence": "If you want to.", "min_confidence": 0.3589}
+{"start_time": 147.14, "end_time": "149.14", "sentence": "Yeah, yeah.", "min_confidence": 0.2579}
+{"start_time": 147.14, "end_time": 149.14, "sentence": "", "min_confidence": 1.0}
