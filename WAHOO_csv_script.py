@@ -4,6 +4,7 @@ import osgeo.osr as osr
 from datetime import datetime, timedelta
 import time
 import sys
+import json
 
 driver = ogr.GetDriverByName("ESRI Shapefile")
 data_source = driver.CreateDataSource(r"E:\UNI\Research_assistant\Shape files\Ride 3\Ride_3.shp")
@@ -26,6 +27,16 @@ layer.CreateField(ogr.FieldDefn("Time", ogr.OFTReal))
 
 # Incorporating functions and data from additional sources
 
+# Getting the time variable data from the file name (audio sentence transcription)
+def audio_start_time_from_path(file_name):
+    day = int(file_name[12:14])
+    month = int(file_name[10:12])
+    year = int(file_name[6:10])
+    hours = int(file_name[15:17])
+    minutes = int(file_name[17:19])
+    seconds = int(file_name[19:21])
+    combined = datetime(year, month, day, hours, minutes, seconds)
+    return combined
 
 # Index matching for video and GPS
 def time_index_matching_function(gps_times,video_times):
@@ -79,16 +90,106 @@ def gps_time_retrieval(gps_path):
     return gps_times
 
 
+def start_time_from_path(file_name):
+    day = int(file_name[12:14])
+    month = int(file_name[10:12])
+    year = int(file_name[6:10])
+    hours = int(file_name[15:17])
+    minutes = int(file_name[17:19])
+    seconds = int(file_name[19:21])
+    combined = datetime(year, month, day, hours, minutes, seconds)
+    return combined
+
+
+def saving_sentence_data(audio_path):
+    start_time = []
+    end_time = []
+    sentence = []
+    confidence = []
+    with open(audio_path) as audio:
+        emotions_reader = csv.reader(audio, delimiter=",")
+        for row in emotions_reader:
+            start_time.append(float(row[0]))
+            end_time.append(float(row[1]))
+            sentence.append(row[2])
+            if len(row) > 3:
+                confidence.append(float(row[3]))
+    return start_time, end_time, confidence, sentence
+
+
+def storing_individual_transcribed_words_get_dictionary(audio_words_path,dict_path, audio_starting_time):
+    with open(dict_path) as dict:
+        dict_reader = csv.reader(dict)
+        for list_of_words in dict_reader:
+            word_dictionary = list_of_words
+    times_words = []
+    with open(audio_words_path) as transcribed_words:
+        word_reader = csv.reader(transcribed_words)
+        for individual_words in word_reader:
+            if not individual_words[0].isalnum() and not individual_words[2] == 'alternatives':
+                if not individual_words[3] == 'punctuation':
+                    word_time = float(individual_words[0])
+                    plus_start = timedelta(seconds=word_time)
+                    word_time = (audio_starting_time + plus_start).strftime('%H:%M:%S')
+                    json_style = individual_words[2]
+                    # a lot of hard coding to get it to format the string to json style right but it looks like it works
+                    json_style = json_style.replace('[', '')
+                    json_style = json_style.replace(']', '')
+                    json_style = json_style.replace("': '", '": "')
+                    json_style = json_style.replace("{'", '{"')
+                    json_style = json_style.replace("'}", '"}')
+                    json_style = json_style.replace("', '", '", "')
+                    json_style = json_style.replace("': ", '": ')
+                    parsed = json.loads(json_style)
+                    time_and_word_temp = [word_time, parsed["content"]]
+                    times_words.append(time_and_word_temp)
+    return times_words, word_dictionary
+
+
+def dictionary_words_used(word_dictionary, time_and_words):
+    words_used_with_times = []
+    index = 0
+    dict_length = len(word_dictionary)
+    dict_index = 0
+    for words in time_and_words:
+        current_word = words[1]
+        while dict_index < dict_length:
+            dict_word_length = str(dictionary[dict_index])
+            dict_word_length = len(dict_word_length)
+            current_word_length = len(current_word)
+            # checking to see if the words are the same length alleviates the correct word within a longer word issue
+            if current_word in dictionary[dict_index] and current_word_length == dict_word_length:
+                info_saving = [times_and_words[index][0], dictionary[dict_index], dict_index]
+                words_used_with_times.append(info_saving)
+            dict_index = dict_index + 1
+        dict_index = 0
+        index = index + 1
+    return words_used_with_times
+
+
+# Defining file paths. This will be replaced by command line runs later on
 gps = 'video timing test (29-11-2021).csv'
 emotions = 'face_video_frames_dominant_emotions.txt'
-# get times for GPS first
-gps_times = gps_time_retrieval(gps)
-# Get dominant emotions and their times
-emotions_list, emotions_time = store_dominant_emotions(emotions)
-# Get time indexes for when these two data sets match up
-gps_index, time_index = time_index_matching_function(gps_times,emotions_time)
+audio_sentences = "audio-20211203-153515.csv"
+audio_words = 'audio-202111203-individual-words.csv'
+dictionary_path = 'Dictionary.txt'
 
-# probably going to need some sort of i = 0 counter for tracking loops and times
+# CALLING FUNCTIONS TO TO RETRIEVE CSV DATA AND FIND REQUIRED INDEXES
+# 1. Get times for GPS first
+gps_times = gps_time_retrieval(gps)
+# 2. Get dominant emotions and their times
+emotions_list, emotions_time = store_dominant_emotions(emotions)
+# 3. Get time indexes for when these two data sets match up
+gps_index, time_index = time_index_matching_function(gps_times,emotions_time)
+# 4. Retrieve the transcribed sentences and do minor time calculations on them
+sentence_start, sentence_end, sentence_confidence, sentences = saving_sentence_data(audio_sentences)
+audio_start_time = audio_start_time_from_path(audio_sentences)
+# 5. Retrieve the individual transcribed words and check them against the dictionary to determine their addition to the shapefile
+times_and_words, dictionary = storing_individual_transcribed_words_get_dictionary(audio_words, dictionary_path, audio_start_time)
+# an index in the main writing loop to the shapefile should be used to keep track of which words and times have been added
+dict_words_used_with_times = dictionary_words_used(dictionary, times_and_words)
+
+
 i = 0
 with open(gps) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')

@@ -1,5 +1,6 @@
 import csv
-import datetime
+from datetime import datetime, timedelta
+import time
 
 # Best to turn both of these csv reading code blocks into functions
 HRV_path = 'eSense Pulse data from 09.12.21 11_42_14.csv'
@@ -21,19 +22,25 @@ def get_hrv_data(hrv_path):
                     #print(f"is this the row thats gonna fuck it? {row}")
                     row_test = row[0][0]
                     if not row_test.isalpha():
-                        print(f"ayyy")
-                        row = row.replace(";;", ';')
-                        #hrv_data.append(float(row[0]))
-                        #hrv_data.append('\n')
-                        temp = float(row[0])
-                        #need to find a way to ignore the empty things where in the csv there is ";;"
-                        hrv_data.append(temp)
-                        hrv_data.append('\n')
+                        time_elapsed = float(row[0])
+                        heart_rate = float(row[1])
+                        rr_interval = float(row[2])
+                        hrv_amplitude = float(row[3])
+                        regularity = float(row[4])
+                        timestamp = row[5]
+                        hours = int(timestamp[0:2])
+                        minutes = int(timestamp[3:5])
+                        seconds = int(timestamp[6:8])
+                        annoying = [2021, 1, 5]
+                        timestamp = datetime(annoying[0], annoying[1], annoying[2], hours, minutes, seconds).strftime('%H:%M:%S')
+                        combined = [time_elapsed, heart_rate, rr_interval, hrv_amplitude, regularity, timestamp]
+                        hrv_data.append(combined)
+
 
     return hrv_data
 
 
-hrv_data = get_hrv_data(HRV_path[0])
+hrv_data = get_hrv_data(HRV_path)
 print(f"all the data saved that we want: {hrv_data}")
 
 

@@ -1,0 +1,1 @@
+safe,unsafe,scared,close call,anxious,uncomfortable,happy,fun,worried,crowded,near miss,afraid,vulnerable,oncoming
