@@ -12,7 +12,8 @@ srs = osr.SpatialReference()
 srs.ImportFromEPSG(4326)
 
 # create the layer
-layer = data_source.CreateLayer("Ride_3", srs, ogr.wkbPoint)
+# This name will change and be dependant on input files
+layer = data_source.CreateLayer("Ride_4", srs, ogr.wkbPoint)
 
 # Add the fields we're interested in
 field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
@@ -24,6 +25,10 @@ layer.CreateField(ogr.FieldDefn("Distance", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Cadence", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Time", ogr.OFTReal))
+layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTReal))
+layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTReal))
+layer.CreateField(ogr.FieldDefn("Dictionary_words", ogr.OFTReal))
+
 
 # Incorporating functions and data from additional sources
 
@@ -188,7 +193,7 @@ audio_start_time = audio_start_time_from_path(audio_sentences)
 times_and_words, dictionary = storing_individual_transcribed_words_get_dictionary(audio_words, dictionary_path, audio_start_time)
 # an index in the main writing loop to the shapefile should be used to keep track of which words and times have been added
 dict_words_used_with_times = dictionary_words_used(dictionary, times_and_words)
-
+#convert search words to lower case to alleviate capital dictionary problems
 
 i = 0
 with open(gps) as csv_file:
@@ -199,7 +204,6 @@ with open(gps) as csv_file:
             position_lat_semi_circles = row[7]
             position_long_semi_circles = row[10]
             speed = row[28]
-            #cadence = row[25]
             distance = row[22]
             altitude = row[16]
             time = row[4]
@@ -233,6 +237,8 @@ with open(gps) as csv_file:
                 feature.SetField("Distance", distance)
                 feature.SetField("Altitude", altitude)
                 feature.SetField("Time", time_variable)
+
+
 
                 # create the WKT for the feature using Python string formatting
                 wkt = f"POINT({position_long_degrees} {position_lat_degrees})"
