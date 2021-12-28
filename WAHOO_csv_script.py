@@ -7,7 +7,7 @@ import sys
 import json
 
 driver = ogr.GetDriverByName("ESRI Shapefile")
-data_source = driver.CreateDataSource(r"E:\UNI\Research_assistant\Shape files\Ride 3\Ride_3.shp")
+data_source = driver.CreateDataSource(r"E:\UNI\Research_assistant\Shape files\Testing\Testing new time variable type.shp")
 srs = osr.SpatialReference()
 srs.ImportFromEPSG(4326)
 
@@ -24,10 +24,10 @@ layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Distance", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Cadence", ogr.OFTReal))
 layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
-layer.CreateField(ogr.FieldDefn("Time", ogr.OFTReal))
-layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTReal))
-layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTReal))
-layer.CreateField(ogr.FieldDefn("Dictionary_words", ogr.OFTReal))
+layer.CreateField(ogr.FieldDefn("Time", ogr.OFTDateTime))
+layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
+layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
+layer.CreateField(ogr.FieldDefn("DictionaryWords", ogr.OFTReal))
 
 
 # Incorporating functions and data from additional sources
@@ -46,17 +46,18 @@ def audio_start_time_from_path(file_name):
 # Index matching for video and GPS
 def time_index_matching_function(gps_times,video_times):
     counter = 0
+    gps_index_find = None
+    video_index_find = None
     for y in gps_times:
         counter_2 = 0
         for z in video_times:
             if y == z:
                 print("we have a match")
-                gps_index = counter
-                video_index = counter_2
+                gps_index_find = counter
+                video_index_find = counter_2
             counter_2 = counter_2 + 1
         counter = counter + 1
-        #Need a failsafe incase the data sets dont match up whatsoever
-    return gps_index, video_index
+    return gps_index_find, video_index_find
 
 
 # For dominant emotions
@@ -173,11 +174,11 @@ def dictionary_words_used(word_dictionary, time_and_words):
 
 
 # Defining file paths. This will be replaced by command line runs later on
-gps = 'video timing test (29-11-2021).csv'
+gps = 'Nov-7-wSpeedCadence.csv'
 emotions = 'face_video_frames_dominant_emotions.txt'
 audio_sentences = "audio-20211203-153515.csv"
 audio_words = 'audio-202111203-individual-words.csv'
-dictionary_path = 'Dictionary.txt'
+dictionary_path = 'Dictionary.txt' # This path will be a constant
 
 # CALLING FUNCTIONS TO TO RETRIEVE CSV DATA AND FIND REQUIRED INDEXES
 # 1. Get times for GPS first
@@ -185,7 +186,11 @@ gps_times = gps_time_retrieval(gps)
 # 2. Get dominant emotions and their times
 emotions_list, emotions_time = store_dominant_emotions(emotions)
 # 3. Get time indexes for when these two data sets match up
-gps_index, time_index = time_index_matching_function(gps_times,emotions_time)
+gps_time_index, emotion_time_index = time_index_matching_function(gps_times,emotions_time)
+# Stopping the script from running early if there is no time overlap betwen gps and emotions
+if gps_time_index is None and emotion_time_index is None:
+    print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
+    exit()
 # 4. Retrieve the transcribed sentences and do minor time calculations on them
 sentence_start, sentence_end, sentence_confidence, sentences = saving_sentence_data(audio_sentences)
 audio_start_time = audio_start_time_from_path(audio_sentences)
@@ -193,11 +198,23 @@ audio_start_time = audio_start_time_from_path(audio_sentences)
 times_and_words, dictionary = storing_individual_transcribed_words_get_dictionary(audio_words, dictionary_path, audio_start_time)
 # an index in the main writing loop to the shapefile should be used to keep track of which words and times have been added
 dict_words_used_with_times = dictionary_words_used(dictionary, times_and_words)
-#convert search words to lower case to alleviate capital dictionary problems
+# convert search words to lower case to alleviate capital dictionary problems
+
+# Idea is that gps will be device first turned on then emotions will be index 1 and gps will already have written x number of points to shapefile.
+# However, a backup incase audio recording begins first should be coded. Perhaps making it start at the GPS one no matter what.
+if gps_time_index > emotion_time_index:
+    is_GPS_first = False
+else:
+    is_GPS_first = True
+# if GPS_first == True, then gps_time_index is x and emotion is 1, so an iterative check should be performed until
+# gps_time_index == x then emotion data starts being written
+# if GPS_first == False then emotion_time_index = x and gps_time_index = 1. Therefore, up until x emotions will be cut
+# off in the shapefile
 
 i = 0
 with open(gps) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
+    row_counter = 0
     for row in csv_reader:
         if row[2] == 'record' and row[0] == 'Data' and len(row) > 20:
             #indexes found manually or by using Finding_indexes.py
@@ -224,7 +241,7 @@ with open(gps) as csv_file:
                 # print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
                 time_variable = timestamp.strftime('%H:%M:%S')
 
-                print(f"The file types is: {type(time_variable)}\n")
+                #print(f"The file types is: {type(time_variable)}\n")
 
 
                 # create the feature
@@ -237,6 +254,14 @@ with open(gps) as csv_file:
                 feature.SetField("Distance", distance)
                 feature.SetField("Altitude", altitude)
                 feature.SetField("Time", time_variable)
+                #if is_GPS_first is False:
+                    #emotion_to_write = emotions_list[emotion_time_index + row_counter]
+                    #feature.SetField("Emotion", emotion_to_write)
+                #else:
+                    #if row_counter >= emotion_time_index:
+                       # emotion_to_write = emotions_list[row_counter]
+                        #feature.SetField("Emotion", emotion_to_write)
+
 
 
 
@@ -250,5 +275,7 @@ with open(gps) as csv_file:
                 layer.CreateFeature(feature)
 
                 feature = None
+                row_counter = row_counter + 1
             i = i + 1
     data_source = None
+
