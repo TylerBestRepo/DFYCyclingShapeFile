@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import time
 
 # Best to turn both of these csv reading code blocks into functions
-HRV_path = 'eSense Pulse data from 09.12.21 11_42_14.csv'
+HRV_path = 'eSense Pulse data from 09.02.22 13_22_59.csv'
 
 #Format for this CSV is:
 #   time elapsed; heart rate measurement; RR interval (dunno what this is); RR interval in ms; HRV amplitude; regularity; timestamp; marker;
@@ -35,12 +35,13 @@ def get_hrv_data(hrv_path):
                         timestamp = datetime(annoying[0], annoying[1], annoying[2], hours, minutes, seconds).strftime('%H:%M:%S')
                         combined = [time_elapsed, heart_rate, rr_interval, hrv_amplitude, regularity, timestamp]
                         hrv_data.append(combined)
+                        print(f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
 
 
     return hrv_data
 
 
 hrv_data = get_hrv_data(HRV_path)
-print(f"all the data saved that we want: {hrv_data}")
+print(f"all the data saved that we want: {hrv_data[3][1]}")
 
 

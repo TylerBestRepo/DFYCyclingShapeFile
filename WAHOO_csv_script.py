@@ -16,6 +16,14 @@ import json
 #     'dictionary_path' : 'Dictionary.txt' # This path will be a constant
 # }
 
+inputFile = {
+    'sessionID' : '12',
+    'gps' : 'Nov-7-wSpeedCadence.csv',
+    'emotions' : 'face_video_frames_dominant_emotions.txt',
+    'audio_sentences' : "audio-20211203-153515.csv",
+    'audio_words' : 'audio-202111203-individual-words.csv',
+    'dictionary_path' : 'Dictionary.txt' # This path will be a constant
+}
 
 
 def analysis(inputFile, outputFile):
@@ -39,9 +47,8 @@ def analysis(inputFile, outputFile):
     layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Distance", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("Cadence", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("Time", ogr.OFTDateTime))
+    layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("DictionaryWords", ogr.OFTReal))
@@ -265,7 +272,7 @@ def analysis(inputFile, outputFile):
                     # feature.SetField("Cadence", cadence) # Cadence measurements probably wont be used as the measurement devices are too annoying to attach to the users bike
                     feature.SetField("Distance", distance)
                     feature.SetField("Altitude", altitude)
-                    feature.SetField("Time", time_variable)
+                    feature.SetField("Time", string(time_variable))
                     #if is_GPS_first is False:
                         #emotion_to_write = emotions_list[emotion_time_index + row_counter]
                         #feature.SetField("Emotion", emotion_to_write)
@@ -292,5 +299,9 @@ def analysis(inputFile, outputFile):
         data_source = None
 
 
-if __name__ == "__main__": 
-    analysis() 
+#if __name__ == "__main__":
+#    analysis()
+
+outputFile = r"E:\UNI\Research_assistant\Shape files\2022 test"
+
+analysis(inputFile,outputFile)
