@@ -296,8 +296,9 @@ def analysis(inputFile, outputFile):
     i = 0
     dict_idx = 0
     sentence_idx = 0
-
-    hrv_writing_idx = hrv_gps_matching_index
+    hrv_writing_idx = 0
+    if write_hrv:
+        hrv_writing_idx = hrv_gps_matching_index
     write_sentence = False
     new_sentence = False
     write_emotions = False
@@ -324,6 +325,11 @@ def analysis(inputFile, outputFile):
                 if is_GPS_first:
                     write_emotions = True
 
+                if not write_hrv:
+                    if time == hrv_times[i]:
+                        write_hrv = True
+                    else:
+                        write_hrv = False
                 if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readings
                     position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
                     position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
@@ -417,8 +423,9 @@ def analysis(inputFile, outputFile):
 
                     feature = None
                     row_counter = row_counter + 1
-                    hrv_writing_idx = hrv_writing_idx + 1
+
                 i = i + 1
+                hrv_writing_idx = hrv_writing_idx + 1
         data_source = None
 
 
