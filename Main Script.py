@@ -365,6 +365,8 @@ def analysis(inputFile, outputFile):
                     altitude_save = "{:.2f}".format(altitude)
                     distance_save = "{:.3f}".format(distance)
                     csv_data_to_write = [str(time_variable), speed_save, altitude_save, distance_save]
+                    if write_hrv:
+                        csv_data_to_write.append(hrv_data[hrv_writing_idx][1])
 
                     if write_emotions:
                         if len(emotions_list) > i:
