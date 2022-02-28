@@ -1,4 +1,6 @@
 import csv
+import os
+
 import osgeo.ogr as ogr
 import osgeo.osr as osr
 from datetime import datetime, timedelta
@@ -17,22 +19,31 @@ import json
 #     'hrv_path' : 'eSense Pulse data from 09.02.22 13_22_59.csv'
 # }
 
-inputFile = {
-    'sessionID' : 'Test data from 3rd Feb', #
-    'gps' : 'Feb-3.csv', #
-    'emotions' : '03022022 dominant emotions.txt', #
-    'audio_sentences' : "audio-20220302-104404.csv",
-    'audio_words' : 'audio-20220302-individual-words.csv',
-    'dictionary_path' : 'Dictionary.txt', # This path will be a constant #
-    'HRV_path' : 'eSense Pulse data from 09.02.22 13_22_59.csv'
+#inputFile = {
+    #'sessionID' : 'Test data from 16th Feb', #
+    #'gps' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\Feb-16.csv", #
+    #'emotions' : r"E:\UNI\Research_assistant\Test data rides\17th Feb/16022022 dominant emotions.txt", #
+    #'audio_sentences' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\audio-20220302-070538.csv",
+   # 'audio_words' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\16022022 individual words.csv",
+  #  'dictionary_path' : 'Dictionary.txt', # This path will be a constant #
+ #   'HRV_path' : ''
 
-}
+#}
+
+#inputFile = {
+#    'sessionID' : 'Test data from 16th Feb', #
+#    'gps' : 'Feb-3.csv', #
+#    'emotions' : '03022022 dominant emotions.txt', #
+#    'audio_sentences' : "audio-20220302-104404.csv",
+#    'audio_words' : 'audio-20220302-individual-words.csv',
+#    'dictionary_path' : 'Dictionary.txt', # This path will be a constant #
+#    'HRV_path' : 'eSense Pulse data from 09.02.22 13_22_59.csv'
+#}
 
 
 def analysis(inputFile, outputFile):
     #input File (dict):
     #must include sessionID (str), transcript file location (str), video emotion file location (str), audio words location (str)
-    
 
     driver = ogr.GetDriverByName("ESRI Shapefile")
     data_source = driver.CreateDataSource(outputFile)
@@ -61,7 +72,8 @@ def analysis(inputFile, outputFile):
     # Incorporating functions and data from additional sources
 
     # Getting the time variable data from the file name (audio sentence transcription)
-    def audio_start_time_from_path(file_name):
+    def audio_start_time_from_path(file_name_path):
+        file_name = os.path.basename(file_name_path)
         day = int(file_name[12:14])
         month = int(file_name[10:12])
         year = int(file_name[6:10])
@@ -273,14 +285,20 @@ def analysis(inputFile, outputFile):
     sentences_end_time = sentences_proper_time_value(sentence_end, audio_start_time)
 
     #6. Retrieving HRV data and then figuring out when it should be written into the main loop
-    hrv_data, hrv_times = get_hrv_data(inputFile['HRV_path'])
-    # Time index figuring out now
-    gps_hrv_maching_index,hrv_gps_matching_index = time_index_matching_function(gps_times,hrv_times)
     write_hrv = False
-    if gps_hrv_maching_index < hrv_gps_matching_index:
-        write_hrv = True
+    hrv_file_doesnt_exist = False
+    if(inputFile['HRV_path'] == ''):
+        print("No HRV file was input")
+        hrv_file_doesnt_exist = True
     else:
+        hrv_data, hrv_times = get_hrv_data(inputFile['HRV_path'])
+        # Time index figuring out now
+        gps_hrv_maching_index, hrv_gps_matching_index = time_index_matching_function(gps_times, hrv_times)
         write_hrv = False
+        if gps_hrv_maching_index < hrv_gps_matching_index:
+            write_hrv = True
+        else:
+            write_hrv = False
 
     # Idea is that gps will be device first turned on then emotions will be index 1 and gps will already have written x number of points to shapefile.
     # However, a backup incase audio recording begins first should be coded. Perhaps making it start at the GPS one no matter what.
@@ -293,9 +311,19 @@ def analysis(inputFile, outputFile):
     # if GPS_first == False then emotion_time_index = x and gps_time_index = 1. Therefore, up until x emotions will be cut
     # off in the shapefile
 
+    # Finding if sentences comes before GPS reading
+    gps_sentence_maching_index, sentence_start_gps_matching_index = time_index_matching_function(gps_times, sentences_start_time)
+    if gps_sentence_maching_index > sentence_start_gps_matching_index:
+        GPS_before_sentence = True
+    else:
+        GPS_before_sentence = False
     i = 0
     dict_idx = 0
-    sentence_idx = 0
+     # This needs to be changed if first time is before GPS starts
+    if GPS_before_sentence:
+        sentence_idx = 0
+    else:
+        sentence_idx = sentence_start_gps_matching_index
     hrv_writing_idx = 0
     if write_hrv:
         hrv_writing_idx = hrv_gps_matching_index
@@ -310,7 +338,7 @@ def analysis(inputFile, outputFile):
         csv_reader = csv.reader(csv_file, delimiter=',')
         row_counter = 0
         for row in csv_reader:
-            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20:
+            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '':
                 #indexes found manually or by using Finding_indexes.py
                 position_lat_semi_circles = row[7]
                 position_long_semi_circles = row[10]
@@ -324,14 +352,17 @@ def analysis(inputFile, outputFile):
                         write_emotions = True
                 if is_GPS_first:
                     write_emotions = True
+                if hrv_file_doesnt_exist == False:
+                    if not write_hrv:
+                        if time == hrv_times[i]:
+                            write_hrv = True
+                        else:
+                            write_hrv = False
 
-                if not write_hrv:
-                    if time == hrv_times[i]:
-                        write_hrv = True
-                    else:
-                        write_hrv = False
                 if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readings
+                    print(f"what does lat say?: {position_lat_semi_circles}\n")
                     position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
+                    print(f"looking for longitude problem: {position_long_semi_circles}\n")
                     position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
                     # Prints give visual feedback to know everything is being retrieved as we desire
                     print(f"position_lat_degrees: {position_lat_degrees}")
@@ -381,18 +412,20 @@ def analysis(inputFile, outputFile):
                         else:
                             print("No emotions to write here")
                             csv_data_to_write.append(' ')
-
-                    if gps_times[i] == dict_words_used_with_times[dict_idx][1]:
-                        feature.SetField("DictionaryWords", dict_words_used_with_times[dict_idx][1])
-                        feature.SetField("DictionaryIdx", dict_words_used_with_times[dict_idx][2])
-                        csv_data_to_write.append(dict_words_used_with_times[dict_idx][1])
-                        dict_idx = dict_idx + 1
+                    #Need a boolean to check if any dictionary words were used to not compare to an empty list if none were used
+                    if dict_words_used_with_times:
+                        if gps_times[i] == dict_words_used_with_times[dict_idx][1]:
+                            feature.SetField("DictionaryWords", dict_words_used_with_times[dict_idx][1])
+                            feature.SetField("DictionaryIdx", dict_words_used_with_times[dict_idx][2])
+                            csv_data_to_write.append(dict_words_used_with_times[dict_idx][1])
+                            dict_idx = dict_idx + 1
                     else:
                         csv_data_to_write.append('N/A')
                         feature.SetField("DictionaryWords", "Not applicable")
                         feature.SetField("DictionaryIdx", "Not applicable")
 
                         # Write in the sentences here
+                        # Sentences can start before the GPS atm and causes no sentence data to get written
                         if (gps_times[i] == sentences_start_time[sentence_idx]):
                             write_sentence = True
                         if (gps_times[i] == sentences_end_time[sentence_idx]):
@@ -430,10 +463,10 @@ def analysis(inputFile, outputFile):
 
 
 
-#if __name__ == "__main__":
-#   analysis()
+if __name__ == "__main__":
+   analysis()
 
-outputFile = r"E:\UNI\Research_assistant\Output results\Shape files\2022 test"
+#outputFile = r"E:\UNI\Research_assistant\Output results\Shape files\2022 test"
 
-analysis(inputFile, outputFile)
+#analysis(inputFile, outputFile)
 
