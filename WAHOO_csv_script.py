@@ -272,7 +272,7 @@ def analysis(inputFile, outputFile):
                     # feature.SetField("Cadence", cadence) # Cadence measurements probably wont be used as the measurement devices are too annoying to attach to the users bike
                     feature.SetField("Distance", distance)
                     feature.SetField("Altitude", altitude)
-                    feature.SetField("Time", string(time_variable))
+                    feature.SetField("Time", str(time_variable))
                     #if is_GPS_first is False:
                         #emotion_to_write = emotions_list[emotion_time_index + row_counter]
                         #feature.SetField("Emotion", emotion_to_write)
