@@ -17,28 +17,25 @@ import json
 #     'audio_words' : 'audio-202111203-individual-words.csv',
 #     'dictionary_path' : 'Dictionary.txt' # This path will be a constant
 #     'hrv_path' : 'eSense Pulse data from 09.02.22 13_22_59.csv'
+#     'empatica_EDA' : 'location'
+#     'empatica_TEMP' : 'location'
 # }
 
-#inputFile = {
-    #'sessionID' : 'Test data from 16th Feb', #
-    #'gps' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\Feb-16.csv", #
-    #'emotions' : r"E:\UNI\Research_assistant\Test data rides\17th Feb/16022022 dominant emotions.txt", #
-    #'audio_sentences' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\audio-20220302-070538.csv",
-   # 'audio_words' : r"E:\UNI\Research_assistant\Test data rides\17th Feb\16022022 individual words.csv",
-  #  'dictionary_path' : 'Dictionary.txt', # This path will be a constant #
- #   'HRV_path' : ''
+inputFile = {
+    'sessionID' : 'Tyler quick ride on the 3rd of April', #
+    'gps' : r"E:\UNI\Research_assistant\My test data/april 3rd/April-3.csv", #
+    
+    'emotions' : r"E:\UNI\Research_assistant\My test data\april 3rd/03042022 dominant emotions.txt", #
 
-#}
+    'audio_sentences' : r"E:\UNI\Research_assistant\My test data\april 3rd\audio-20220304-110155.csv",
+    'audio_words' : r"E:\UNI\Research_assistant\My test data\april 3rd\110155 individual words.csv",
 
-#inputFile = {
-#    'sessionID' : 'Test data from 16th Feb', #
-#    'gps' : 'Feb-3.csv', #
-#    'emotions' : '03022022 dominant emotions.txt', #
-#    'audio_sentences' : "audio-20220302-104404.csv",
-#    'audio_words' : 'audio-20220302-individual-words.csv',
-#    'dictionary_path' : 'Dictionary.txt', # This path will be a constant #
-#    'HRV_path' : 'eSense Pulse data from 09.02.22 13_22_59.csv'
-#}
+    'dictionary_path' : r'Dictionary.txt',# This path will be a constant #
+    'HRV_path' : r'E:\UNI\Research_assistant\My test data/april 3rd/eSense Pulse data from 03.04.22 11_00_08.csv',
+    'empatica_EDA' : r'E:\UNI\Research_assistant\My test data/april 3rd/EDA.csv',
+    'empatica_TEMP' : r'E:\UNI\Research_assistant\My test data/april 3rd/TEMP.csv'
+
+}
 
 
 def analysis(inputFile, outputFile):
@@ -65,7 +62,10 @@ def analysis(inputFile, outputFile):
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("HeartRate", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("Valence", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("DictionaryWords", ogr.OFTReal))
 
 
@@ -113,9 +113,15 @@ def analysis(inputFile, outputFile):
                 if counter == 0:
                     emotions_list = x
                     counter = counter + 1
+                elif counter == 1:
+                    valence = x
+                    counter = counter + 1
+                elif counter == 2:
+                    arousal = x
+                    counter = counter + 1
                 else:
                     emotions_time = x
-        return emotions_list, emotions_time
+        return emotions_list, valence, arousal, emotions_time
 
 
     # For time subtraction
@@ -259,13 +265,62 @@ def analysis(inputFile, outputFile):
                                 f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
 
         return hrv_data, hrv_times
-    
+
+    def eda_extraction_empatica(eda_file):
+        eda_data = []
+        skip_first = True
+        with open(eda_file) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            counter = 0
+            for row in csv_reader:
+                if (counter == 0):
+                    empatica_start_time = row[0]
+                    empatica_start_time = float(empatica_start_time)
+                    timestamp = datetime.fromtimestamp(empatica_start_time)
+                    converted_time = timestamp.strftime('%H:%M:%S')
+                    print(f"Converted start time = {converted_time}")
+                if (skip_first == False):
+                    eda_data.append(row[0])
+                skip_first = False
+                counter = counter + 1
+        return eda_data, empatica_start_time
+
+    def temperature_extraction_empatica(temperature_path):
+        temperature_data = []
+        skip_first = True
+        with open(temperature_path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                if (skip_first == False):
+                    temperature_data.append(row[0])
+                skip_first = False
+        return temperature_data
+
+    def time_list_for_empatica(empatica_starting_time_string, eda):
+        second = 1
+        plus_time = timedelta(seconds=second)
+        empatica_time_list = []
+        time_temp = datetime.fromtimestamp(empatica_starting_time_string)
+        start_time_from_string = str(time_temp.strftime('%H:%M:%S'))
+
+        date_time_starting = datetime.strptime(start_time_from_string, '%H:%M:%S')
+        new_time = date_time_starting
+        empatica_time_list.append(start_time_from_string)
+        skip_first = False
+        for y in eda:
+            if skip_first:
+                new_time = (new_time + plus_time)
+                converted_new_time = new_time.strftime('%H:%M:%S')
+                empatica_time_list.append(converted_new_time)
+            skip_first = True
+
+        return empatica_time_list
 
     # CALLING FUNCTIONS TO TO RETRIEVE CSV DATA AND FIND REQUIRED INDEXES
     # 1. Get times for GPS first
     gps_times = gps_time_retrieval(inputFile['gps'])
     # 2. Get dominant emotions and their times
-    emotions_list, emotions_time = store_dominant_emotions(inputFile['emotions'])
+    emotions_list, valence, arousal, emotions_time = store_dominant_emotions(inputFile['emotions'])
     # 3. Get time indexes for when these two data sets match up
     gps_time_index, emotion_time_index = time_index_matching_function(gps_times,emotions_time)
     # Stopping the script from running early if there is no time overlap betwen gps and emotions
@@ -299,6 +354,25 @@ def analysis(inputFile, outputFile):
             write_hrv = True
         else:
             write_hrv = False
+    #7. Pulling the empatica data (EDA and Temperature)
+    # Empatica starting time will be used for both
+    if (inputFile['empatica_EDA'] == ''):
+        print("No Empatica file was input")
+        empatica_doesnt_exist = True
+    else:
+        eda_data, empatica_starting_time = eda_extraction_empatica(inputFile['empatica_EDA'])
+        temperature_data = temperature_extraction_empatica(inputFile['empatica_TEMP'])
+        # Bit of logic to determine if starting time is before or after GPS (compare indexes function first)
+        empatica_time_list = time_list_for_empatica(empatica_starting_time, eda_data)
+        gps_time_index, empatica_time_index = time_index_matching_function(gps_times, empatica_time_list)
+
+        if gps_time_index < empatica_time_index:
+            gps_before_empatica = False
+        else:
+            gps_before_empatica = True
+
+            #Still gotta code into the main loop to write the empatica datafore_empatica = True
+
 
     # Idea is that gps will be device first turned on then emotions will be index 1 and gps will already have written x number of points to shapefile.
     # However, a backup incase audio recording begins first should be coded. Perhaps making it start at the GPS one no matter what.
@@ -332,7 +406,7 @@ def analysis(inputFile, outputFile):
     write_emotions = False
     # Opening up csv file to write data into
     # Gonna need to change output location and naming and all of that good stuff
-    data_writer = open(r'E:\UNI\Research_assistant\Output results\Shape files\2022 test\collated_data.txt', 'w')
+    data_writer = open(r'E:\UNI\Research_assistant\Output results\Shape files\2022 test\collated + ' + inputFile['sessionID'] + '.csv', 'w',newline='')
     writer = csv.writer(data_writer)
     with open(inputFile['gps']) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -347,6 +421,9 @@ def analysis(inputFile, outputFile):
                 altitude = row[16]
                 time = row[4]
 
+                do_write_sentence = 1
+                #dont_write_sentence = 0 #Dont think i need this one
+
                 if not is_GPS_first:
                     if i == gps_time_index:
                         write_emotions = True
@@ -360,14 +437,12 @@ def analysis(inputFile, outputFile):
                             write_hrv = False
 
                 if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readings
-                    print(f"what does lat say?: {position_lat_semi_circles}\n")
                     position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
-                    print(f"looking for longitude problem: {position_long_semi_circles}\n")
                     position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
                     # Prints give visual feedback to know everything is being retrieved as we desire
-                    print(f"position_lat_degrees: {position_lat_degrees}")
-                    print(f"position_long_degrees: {position_long_degrees}\n")
-                    print(f"Speed: {speed}\n")
+                    #print(f"position_lat_degrees: {position_lat_degrees}")
+                    #print(f"position_long_degrees: {position_long_degrees}\n")
+                    #print(f"Speed: {speed}\n")
                     # We want to convert speed from a string to a number value
                     if len(speed) < 1: # Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
                         speed = "0"
@@ -408,9 +483,15 @@ def analysis(inputFile, outputFile):
                     if write_emotions:
                         if len(emotions_list) > i:
                             feature.SetField("Emotion", emotions_list[i])  # Not sure this bit right here is correct, indexing could be funky
+                            feature.SetField("Valence", valence[i])
+                            feature.SetField("Arousal", arousal[i])
                             csv_data_to_write.append(emotions_list[i])
+                            csv_data_to_write.append(valence[i])
+                            csv_data_to_write.append(arousal[i])
                         else:
                             print("No emotions to write here")
+                            csv_data_to_write.append(' ')
+                            csv_data_to_write.append(' ')
                             csv_data_to_write.append(' ')
                     #Need a boolean to check if any dictionary words were used to not compare to an empty list if none were used
                     if dict_words_used_with_times:
@@ -436,14 +517,15 @@ def analysis(inputFile, outputFile):
                         if write_sentence:
                             csv_data_to_write.append(sentences[sentence_idx])
                             feature.SetField("Sentence", sentences[sentence_idx])
+                            #feature.SetField("BinSent", "Yes")
                         if new_sentence:
                             csv_data_to_write.append(sentences[sentence_idx])
                             feature.SetField("Sentence", sentences[sentence_idx])
+                            feature.SetField("BinSent", "Yes")
                             sentence_idx = sentence_idx + 1
                             new_sentence = False
 
                         writer.writerow(csv_data_to_write)
-
 
                     # create the WKT for the feature using Python string formatting
                     wkt = f"POINT({position_long_degrees} {position_lat_degrees})"
@@ -463,10 +545,10 @@ def analysis(inputFile, outputFile):
 
 
 
-if __name__ == "__main__":
-   analysis()
+#if __name__ == "__main__":
+   #analysis()
 
-#outputFile = r"E:\UNI\Research_assistant\Output results\Shape files\2022 test"
+outputFile = r"E:\UNI\Research_assistant\My test data\april 3rd\output"
 
-#analysis(inputFile, outputFile)
+analysis(inputFile, outputFile)
 
