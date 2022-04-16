@@ -23,17 +23,17 @@ import json
 
 inputFile = {
     'sessionID' : 'Tyler quick ride on the 3rd of April', #
-    'gps' : r"E:\UNI\Research_assistant\My test data/april 3rd/April-3.csv", #
+    'gps' : r"E:\UNI\Research_assistant\My test data/April 14th/April-14.csv", #
     
-    'emotions' : r"E:\UNI\Research_assistant\My test data\april 3rd/03042022 dominant emotions.txt", #
+    'emotions' : r"E:\UNI\Research_assistant\My test data\April 14th/1404 dominant emotions.txt", #
 
-    'audio_sentences' : r"E:\UNI\Research_assistant\My test data\april 3rd\audio-20220304-110155.csv",
-    'audio_words' : r"E:\UNI\Research_assistant\My test data\april 3rd\110155 individual words.csv",
+    'audio_sentences' : r"E:\UNI\Research_assistant\My test data\April 14th\audio-20220414-180037.csv", # in year month date format for this
+    'audio_words' : r"E:\UNI\Research_assistant\My test data\April 14th\1404 individual words.csv",
 
     'dictionary_path' : r'Dictionary.txt',# This path will be a constant #
-    'HRV_path' : r'E:\UNI\Research_assistant\My test data/april 3rd/eSense Pulse data from 03.04.22 11_00_08.csv',
-    'empatica_EDA' : r'E:\UNI\Research_assistant\My test data/april 3rd/EDA.csv',
-    'empatica_TEMP' : r'E:\UNI\Research_assistant\My test data/april 3rd/TEMP.csv'
+    'HRV_path' : r'E:\UNI\Research_assistant\My test data/April 14th/eSense Pulse data from 14.04.22 17_59_22.csv',
+    'empatica_EDA' : r'E:\UNI\Research_assistant\My test data/April 14th/EDA.csv',
+    'empatica_TEMP' : r'E:\UNI\Research_assistant\My test data/April 14th/TEMP.csv'
 
 }
 
@@ -261,8 +261,7 @@ def analysis(inputFile, outputFile):
                             combined = [time_elapsed, heart_rate, rr_interval, hrv_amplitude, regularity, timestamp]
                             hrv_times.append(timestamp)
                             hrv_data.append(combined)
-                            print(
-                                f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
+                            #print(f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
 
         return hrv_data, hrv_times
 
@@ -448,6 +447,7 @@ def analysis(inputFile, outputFile):
                         speed = "0"
                     speed = float(speed)
                     time = float(time)
+                    print(f"Whats wrong with distance being pulled?: {distance}\n")
                     distance = float(distance)
                     altitude = float(altitude)
                     timestamp = datetime.fromtimestamp(time) # This can output up to date time and year but for this we probably only need hours minutes seconds
@@ -548,7 +548,7 @@ def analysis(inputFile, outputFile):
 #if __name__ == "__main__":
    #analysis()
 
-outputFile = r"E:\UNI\Research_assistant\My test data\april 3rd\output"
+outputFile = r"E:\UNI\Research_assistant\My test data\April 14th\output"
 
 analysis(inputFile, outputFile)
 
