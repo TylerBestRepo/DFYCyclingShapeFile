@@ -4,13 +4,14 @@ import osgeo.osr as osr
 
 # Save and close the data source
 
-with open(r"Nov-7-wSpeedCadence.csv") as csv_file:
+with open(r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/April-14.csv") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     y = 0
     for row in csv_reader:
         for idx, x in enumerate(row):
             if x == 'speed':
                 speed_index = idx + 1
+                print(f"The speed index is: {speed_index}\n")
             #if x == 'cadence':
                 #cadence_index = idx + 1
             if x == 'distance':
@@ -19,6 +20,7 @@ with open(r"Nov-7-wSpeedCadence.csv") as csv_file:
                 altitude_index = idx + 1
             if x == 'timestamp':
                 time_index = idx+1
+
 
     y = y+1
     print(f"Time index: {time_index}\nSpeed index: {speed_index}\nDistance index: {distance_index}\nAltitude index: {altitude_index}\n")

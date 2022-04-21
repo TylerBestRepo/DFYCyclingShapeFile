@@ -1,6 +1,7 @@
 import csv
 import os
 
+import osgeo
 import osgeo.ogr as ogr
 import osgeo.osr as osr
 from datetime import datetime, timedelta
@@ -22,18 +23,18 @@ import json
 # }
 
 inputFile = {
-    'sessionID' : 'Tyler quick ride on the 3rd of April', #
-    'gps' : r"E:\UNI\Research_assistant\My test data/April 14th/April-14.csv", #
+    'sessionID' : 'Tyler quick ride on the 14th of April', #
+    'gps' : r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/April-14.csv", #
     
-    'emotions' : r"E:\UNI\Research_assistant\My test data\April 14th/1404 dominant emotions.txt", #
+    'emotions' : r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/1404 dominant emotions.txt", #
 
-    'audio_sentences' : r"E:\UNI\Research_assistant\My test data\April 14th\audio-20220414-180037.csv", # in year month date format for this
-    'audio_words' : r"E:\UNI\Research_assistant\My test data\April 14th\1404 individual words.csv",
+    'audio_sentences' : r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/audio-20220414-180037.csv",
+    'audio_words' : r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/1404 individual words.csv",
 
     'dictionary_path' : r'Dictionary.txt',# This path will be a constant #
-    'HRV_path' : r'E:\UNI\Research_assistant\My test data/April 14th/eSense Pulse data from 14.04.22 17_59_22.csv',
-    'empatica_EDA' : r'E:\UNI\Research_assistant\My test data/April 14th/EDA.csv',
-    'empatica_TEMP' : r'E:\UNI\Research_assistant\My test data/April 14th/TEMP.csv'
+    'HRV_path' : r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
+    'empatica_EDA' : '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv', # Have I written these two empatica things in to be written?
+    'empatica_TEMP' : '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv' #check code and debug/read through to determine
 
 }
 
@@ -61,11 +62,14 @@ def analysis(inputFile, outputFile):
     layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("HeartRate", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("RRInterval", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
-    layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Valence", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("EDA"), ogr.OFTReal)
+    layer.CreateField(ogr.FieldDefn("TEMP"), ogr.OFTReal)
     layer.CreateField(ogr.FieldDefn("DictionaryWords", ogr.OFTReal))
 
 
@@ -137,9 +141,10 @@ def analysis(inputFile, outputFile):
         gps_times = []
         with open(gps_path) as bike_gps:
             gps_reader = csv.reader(bike_gps, delimiter=',')
-            for i in gps_reader:
-                if i[2] == 'record' and i[0] == 'Data' and len(i) > 20:
-                    time_temp = float(i[4])
+            for row in gps_reader:
+                #if i[2] == 'record' and i[0] == 'Data' and len(i) > 20:
+                if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21]:
+                    time_temp = float(row[4])
                     time_temp = datetime.fromtimestamp(time_temp)
                     time_temp = str(time_temp.strftime('%H:%M:%S'))
                     gps_times.append(time_temp)
@@ -261,7 +266,8 @@ def analysis(inputFile, outputFile):
                             combined = [time_elapsed, heart_rate, rr_interval, hrv_amplitude, regularity, timestamp]
                             hrv_times.append(timestamp)
                             hrv_data.append(combined)
-                            #print(f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
+                            print(
+                                f"Heart Rate: {heart_rate}\tHRV amplitude: {hrv_amplitude}\tTime of measurement: {timestamp}\n")
 
         return hrv_data, hrv_times
 
@@ -278,21 +284,26 @@ def analysis(inputFile, outputFile):
                     timestamp = datetime.fromtimestamp(empatica_start_time)
                     converted_time = timestamp.strftime('%H:%M:%S')
                     print(f"Converted start time = {converted_time}")
-                if (skip_first == False):
-                    eda_data.append(row[0])
-                skip_first = False
+                    #greater than 1 because first data point is the time and second is the sampling rate then a 0 measurement
+                if (counter > 2):
+                    eda_data.append(float(row[0]))
+                    #skip_first = False
+
+                if counter == 1:
+                    dividing_number_empatica = row[0]
                 counter = counter + 1
-        return eda_data, empatica_start_time
+        return eda_data, empatica_start_time, float(dividing_number_empatica)
 
     def temperature_extraction_empatica(temperature_path):
         temperature_data = []
         skip_first = True
+        counter = 0
         with open(temperature_path) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for row in csv_reader:
-                if (skip_first == False):
-                    temperature_data.append(row[0])
-                skip_first = False
+                if (counter > 2):
+                    temperature_data.append(float(row[0]))
+                counter = counter + 1
         return temperature_data
 
     def time_list_for_empatica(empatica_starting_time_string, eda):
@@ -315,15 +326,43 @@ def analysis(inputFile, outputFile):
 
         return empatica_time_list
 
+    def empatica_data_averager(temp_data, eda_data):
+        counter = 0
+        averager_temp = 0
+        averager_eda = 0
+        mini_counter = 0
+        new_temp_data = []
+        new_eda_data = []
+        while (counter < len(temp_data)):
+            averager_temp = float(temp_data[counter]) + averager_temp
+            averager_eda = float(eda_data[counter]) + averager_eda
+            mini_counter = mini_counter + 1
+            if (mini_counter == dividing_number):
+                averager_temp = averager_temp / dividing_number
+                averager_eda = averager_eda / dividing_number
+                new_temp_data.append(averager_temp)
+                new_eda_data.append(averager_eda)
+                averager_temp = 0
+                averager_eda = 0
+                mini_counter = 0
+            elif (counter == len(temp_data) - 1):
+                averager_temp = averager_temp / mini_counter
+                averager_eda = averager_eda / mini_counter
+                new_temp_data.append(averager_temp)
+                new_eda_data.append(averager_eda)
+            counter = counter + 1
+
+        return new_temp_data, new_eda_data
+
     # CALLING FUNCTIONS TO TO RETRIEVE CSV DATA AND FIND REQUIRED INDEXES
     # 1. Get times for GPS first
     gps_times = gps_time_retrieval(inputFile['gps'])
     # 2. Get dominant emotions and their times
     emotions_list, valence, arousal, emotions_time = store_dominant_emotions(inputFile['emotions'])
     # 3. Get time indexes for when these two data sets match up
-    gps_time_index, emotion_time_index = time_index_matching_function(gps_times,emotions_time)
+    gps_time_index_emotionCompare, emotion_time_index = time_index_matching_function(gps_times,emotions_time)
     # Stopping the script from running early if there is no time overlap betwen gps and emotions
-    if gps_time_index is None and emotion_time_index is None:
+    if gps_time_index_emotionCompare is None and emotion_time_index is None:
         print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
         exit()
     # 4. Retrieve the transcribed sentences and do minor time calculations on them
@@ -359,23 +398,29 @@ def analysis(inputFile, outputFile):
         print("No Empatica file was input")
         empatica_doesnt_exist = True
     else:
-        eda_data, empatica_starting_time = eda_extraction_empatica(inputFile['empatica_EDA'])
+        eda_data, empatica_starting_time, dividing_number = eda_extraction_empatica(inputFile['empatica_EDA'])
         temperature_data = temperature_extraction_empatica(inputFile['empatica_TEMP'])
         # Bit of logic to determine if starting time is before or after GPS (compare indexes function first)
-        empatica_time_list = time_list_for_empatica(empatica_starting_time, eda_data)
-        gps_time_index, empatica_time_index = time_index_matching_function(gps_times, empatica_time_list)
+        #pass in the averaged eda data to get a better TIME list length
+        temperature_data_averaged, eda_data_averaged = empatica_data_averager(temperature_data, eda_data)
+        empatica_time_list = time_list_for_empatica(empatica_starting_time, eda_data_averaged)
+        gps_time_index_empaticaCompare, empatica_time_index = time_index_matching_function(gps_times, empatica_time_list)
 
-        if gps_time_index < empatica_time_index:
+        print(f"The gps time index is: {gps_times[gps_time_index_empaticaCompare]} and the empatica one is: {empatica_time_list[empatica_time_index]}")
+
+        if gps_time_index_empaticaCompare < empatica_time_index:
             gps_before_empatica = False
+            empatica_index = empatica_time_index
         else:
             gps_before_empatica = True
+            empatica_index = 0
 
             #Still gotta code into the main loop to write the empatica datafore_empatica = True
 
 
     # Idea is that gps will be device first turned on then emotions will be index 1 and gps will already have written x number of points to shapefile.
     # However, a backup incase audio recording begins first should be coded. Perhaps making it start at the GPS one no matter what.
-    if gps_time_index < emotion_time_index:
+    if gps_time_index_emotionCompare < emotion_time_index:
         is_GPS_first = False
     else:
         is_GPS_first = True
@@ -403,19 +448,25 @@ def analysis(inputFile, outputFile):
     write_sentence = False
     new_sentence = False
     write_emotions = False
+    write_empatica = False
+    if gps_before_empatica == False:
+        write_empatica = True
+
     # Opening up csv file to write data into
     # Gonna need to change output location and naming and all of that good stuff
-    data_writer = open(r'E:\UNI\Research_assistant\Output results\Shape files\2022 test\collated + ' + inputFile['sessionID'] + '.csv', 'w',newline='')
+    data_writer = open(r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/output/collated + ' + inputFile['sessionID'] + '.csv', 'w',newline='')
     writer = csv.writer(data_writer)
+    csv_titles = ["Time", "Speed(m/s)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions", "Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
+    writer.writerow(csv_titles)
     with open(inputFile['gps']) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         row_counter = 0
         for row in csv_reader:
-            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '':
+            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21]:
                 #indexes found manually or by using Finding_indexes.py
                 position_lat_semi_circles = row[7]
                 position_long_semi_circles = row[10]
-                speed = row[28]
+                speed = row[25]
                 distance = row[22]
                 altitude = row[16]
                 time = row[4]
@@ -424,39 +475,32 @@ def analysis(inputFile, outputFile):
                 #dont_write_sentence = 0 #Dont think i need this one
 
                 if not is_GPS_first:
-                    if i == gps_time_index:
+                    if i == gps_time_index_emotionCompare:
                         write_emotions = True
                 if is_GPS_first:
                     write_emotions = True
-                if hrv_file_doesnt_exist == False:
-                    if not write_hrv:
-                        if time == hrv_times[i]:
-                            write_hrv = True
-                        else:
-                            write_hrv = False
+
 
                 if len(position_lat_semi_circles) > 1:  # This is needed because the first measurement i pulled contained no values so I'm essentially doing all this to ignore the first reading or any null readings
                     position_lat_degrees = float(position_lat_semi_circles) * (180 / 2**31)
                     position_long_degrees = float(position_long_semi_circles) * (180 / 2 ** 31)
-                    # Prints give visual feedback to know everything is being retrieved as we desire
-                    #print(f"position_lat_degrees: {position_lat_degrees}")
-                    #print(f"position_long_degrees: {position_long_degrees}\n")
-                    #print(f"Speed: {speed}\n")
                     # We want to convert speed from a string to a number value
-                    if len(speed) < 1: # Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
-                        speed = "0"
+                    #if len(speed) < 1: # Some data points fall under the same two categories for pulling data but only output location data with no other parameters so the speed is manually set to 0
+                        #speed = "0"
                     speed = float(speed)
                     time = float(time)
-                    print(f"Whats wrong with distance being pulled?: {distance}\n")
-                    distance = float(distance)
                     altitude = float(altitude)
+                    distance = float(distance)
                     timestamp = datetime.fromtimestamp(time) # This can output up to date time and year but for this we probably only need hours minutes seconds
                     # print(timestamp.strftime('%M:%S')) #This timestamp comes out as a string, before this conversion it is some sort of time object
                     time_variable = timestamp.strftime('%H:%M:%S')
-
-                    #print(f"The file types is: {type(time_variable)}\n")
-
-
+                    #This bool check needed to be moved to after the time was converted to a string
+                    if hrv_file_doesnt_exist == False:
+                        if not write_hrv:
+                            if time_variable == hrv_times[i]:
+                                write_hrv = True
+                            else:
+                                write_hrv = False
                     # create the feature
                     feature = ogr.Feature(layer.GetLayerDefn())
                     # Set the attributes using the values from the delimited text file
@@ -468,17 +512,17 @@ def analysis(inputFile, outputFile):
                     feature.SetField("Altitude", altitude)
                     feature.SetField("Time", str(time_variable))
 
-                    if write_hrv:
-                        feature.SetField("HeartRate", hrv_data[hrv_writing_idx][1]) # Probably gonna need some sort of check incase something causes data to end abruptly
-
                     #Initialising a list to store data to the csv
                     #Converting floating numbers to strings to save a specific number of characters to not bloat the txt file
-                    speed_save = "{:.2f}".format(speed)
+                    speed_save = "{:.4f}".format(speed)
                     altitude_save = "{:.2f}".format(altitude)
                     distance_save = "{:.3f}".format(distance)
                     csv_data_to_write = [str(time_variable), speed_save, altitude_save, distance_save]
                     if write_hrv:
                         csv_data_to_write.append(hrv_data[hrv_writing_idx][1])
+                        csv_data_to_write.append(hrv_data[hrv_writing_idx][2])
+                        feature.SetField("HeartRate", hrv_data[hrv_writing_idx][1])
+                        feature.SetField("RRInterval", hrv_data[hrv_writing_idx][2])
 
                     if write_emotions:
                         if len(emotions_list) > i:
@@ -507,24 +551,48 @@ def analysis(inputFile, outputFile):
 
                         # Write in the sentences here
                         # Sentences can start before the GPS atm and causes no sentence data to get written
+                        iWantToUse = False
+                        if (iWantToUse == True):
+                            if (gps_times[i] == sentences_start_time[sentence_idx]):
+                                write_sentence = True
+                            if (gps_times[i] == sentences_end_time[sentence_idx]):
+                                new_sentence = True
+                                write_sentence = False
+                            if not write_sentence and not new_sentence:
+                                csv_data_to_write.append('N/A')
+                            if write_sentence:
+                                # csv_data_to_write.append(sentences[sentence_idx])
+                                csv_data_to_write.append("No sentence spoken")
+                                feature.SetField("Sentence", sentences[sentence_idx])
+                                # feature.SetField("BinSent", "Yes")
+                            if new_sentence:
+                                csv_data_to_write.append(sentences[sentence_idx])
+                                feature.SetField("Sentence", sentences[sentence_idx])
+                                feature.SetField("BinSent", 1)
+                                sentence_idx = sentence_idx + 1
+                                new_sentence = False
+                            else:
+                                feature.SetField("BinSent", 0)
+                        #Testing an alternative more simple method of writing in sentences that might be more correct
                         if (gps_times[i] == sentences_start_time[sentence_idx]):
-                            write_sentence = True
-                        if (gps_times[i] == sentences_end_time[sentence_idx]):
-                            new_sentence = True
-                            write_sentence = False
-                        if not write_sentence and not new_sentence:
-                            csv_data_to_write.append('N/A')
-                        if write_sentence:
                             csv_data_to_write.append(sentences[sentence_idx])
                             feature.SetField("Sentence", sentences[sentence_idx])
-                            #feature.SetField("BinSent", "Yes")
-                        if new_sentence:
-                            csv_data_to_write.append(sentences[sentence_idx])
-                            feature.SetField("Sentence", sentences[sentence_idx])
-                            feature.SetField("BinSent", "Yes")
+                            feature.SetField("BinSent", 1)
                             sentence_idx = sentence_idx + 1
-                            new_sentence = False
+                        else:
+                            csv_data_to_write.append("No sentence spoken")
+                            feature.SetField("Sentence", "N/A")
+                            feature.SetField("BinSent", 0)
 
+                        if (empatica_index + i <= len(eda_data)):
+                            if write_empatica == True:
+                                feature.SetField("EDA", eda_data_averaged[empatica_index + i])
+                                feature.SetField("TEMP", temperature_data_averaged[empatica_index + i])
+                                csv_data_to_write.append(eda_data_averaged[empatica_index + i])
+                                csv_data_to_write.append(temperature_data_averaged[empatica_index + i])
+                            else:
+                                csv_data_to_write.append("EDA data N/A")
+                                csv_data_to_write.append("TEMP data N/A")
                         writer.writerow(csv_data_to_write)
 
                     # create the WKT for the feature using Python string formatting
@@ -548,7 +616,7 @@ def analysis(inputFile, outputFile):
 #if __name__ == "__main__":
    #analysis()
 
-outputFile = r"E:\UNI\Research_assistant\My test data\April 14th\output"
+outputFile = r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/output"
 
 analysis(inputFile, outputFile)
 
