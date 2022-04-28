@@ -4,7 +4,7 @@ import osgeo.osr as osr
 
 # Save and close the data source
 
-with open(r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/April-14.csv") as csv_file:
+with open(r"E:\UNI\Research_assistant\My test data\April 26th\GPS 24th April.csv") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     y = 0
     for row in csv_reader:
