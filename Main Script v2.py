@@ -23,39 +23,39 @@ import json
 # }
 # My mac directories
 inputFile = {
-    'sessionID': 'Tyler quick ride on the 14th of April',  #
-    'gps': r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/April-14.csv",  #
+    'sessionID': 'Tommy 27th with subtract',  #
+    'gps': r"E:\UNI\Research_assistant\My test data\Tommy 27th\April-27.csv",  #
 
-    'emotions': r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/1404 dominant emotions.txt",
+  #  'emotions': r"E:\UNI\Research_assistant\My test data\Tommy 27th\emotion_data.txt",
     #
 
-    'audio_sentences': r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/audio-20220414-180037.csv",
-    'audio_words': r"/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/1404 individual words.csv",
+    'audio_sentences': r"E:\UNI\Research_assistant\My test data\Tommy 27th\audio-20220427-073816.csv",
+    'audio_words': r"E:\UNI\Research_assistant\My test data\Tommy 27th\2704 individual words.csv",
 
-    'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
-    'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
+    #'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
+    #'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
+    #'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
     # Have I written these two empatica things in to be written?
-    'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
+   # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
     # check code and debug/read through to determine
 
-}
+#}
 
-inputFile = {
-    'sessionID': 'Tyler quick ride on the 24th of April',  #
-    'gps': r"E:\UNI\Research_assistant\My test data\April 26th\GPS 24th April.csv",  #
+#inputFile = {
+   # 'sessionID': 'Tyler quick ride on the 24th of April',  #
+   # 'gps': r"E:\UNI\Research_assistant\My test data\April 26th\GPS 24th April.csv",  #
 
-    'emotions': r"E:\UNI\Research_assistant\My test data\April 26th\emotion_data.txt",
+#    'emotions': r"E:\UNI\Research_assistant\My test data\April 26th\emotion_data.txt",
     #
 
-    'audio_sentences': r"E:\UNI\Research_assistant\My test data\April 26th\audio-20220426-174551.csv",
-    'audio_words': r"E:\UNI\Research_assistant\My test data\April 26th\2604 Individual words.csv",
+   # 'audio_sentences': r"E:\UNI\Research_assistant\My test data\April 26th\audio-20220426-174551.csv",
+   # 'audio_words': r"E:\UNI\Research_assistant\My test data\April 26th\2604 Individual words.csv",
 
-    'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': r"E:\UNI\Research_assistant\My test data\April 26th\eSense Pulse data from 26.04.22 17_45_15.csv",
-    'empatica_EDA': r"E:\UNI\Research_assistant\My test data\April 26th\EDA.csv",
+#    'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
+#    'HRV_path': r"E:\UNI\Research_assistant\My test data\April 26th\eSense Pulse data from 26.04.22 17_45_15.csv",
+#    'empatica_EDA': r"E:\UNI\Research_assistant\My test data\April 26th\EDA.csv",
     # Have I written these two empatica things in to be written?
-    'empatica_TEMP': r"E:\UNI\Research_assistant\My test data\April 26th\TEMP.csv"
+#    'empatica_TEMP': r"E:\UNI\Research_assistant\My test data\April 26th\TEMP.csv"
     # check code and debug/read through to determine
 
 }
@@ -88,7 +88,7 @@ def gps_time_retrieval(gps_path):
                 if first_time_index_bool == True:
                     first_time_index = counter
                     first_time_index_bool = False
-                time_temp = float(row[4])
+                time_temp = float(row[4]) -55
                 time_temp = datetime.fromtimestamp(time_temp)
                 time_temp = str(time_temp.strftime('%H:%M:%S'))
                 gps_times.append(time_temp)
@@ -184,7 +184,7 @@ def analysis(inputFile, outputFile):
         for row in csv_reader:
             if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21] and row[27] == "temperature" and row[26] == "m/s":  # and float(row[25]) > 0: #and row[3] != "time_created"
                 speed = float(row[25])
-                time = float(row[4])
+                time = float(row[4]) - 55
                 timestamp = datetime.fromtimestamp(time)
                 time_variable = timestamp.strftime('%H:%M:%S')
                 #long and lat
@@ -225,9 +225,8 @@ def analysis(inputFile, outputFile):
 
 
 
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 # analysis()
 
-outputFile = r"E:\UNI\Research_assistant\My test data\April 26th\output2"
-
+outputFile = r"E:\UNI\Research_assistant\My test data\Tommy 27th\output2withplustime"
 analysis(inputFile, outputFile)
