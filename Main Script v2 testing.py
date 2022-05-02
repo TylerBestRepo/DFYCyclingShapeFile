@@ -49,7 +49,6 @@ class gps:
     gps_path: str
     gps_times: list[str] = field(default_factory=list)
 
-
     def gps_time_retrieval(self) -> None:
         #gps_times = []
         with open(self.gps_path) as bike_gps:
@@ -71,7 +70,7 @@ class gps:
         self.first_time_index = first_time_index
         #return gps_times, first_time_index
 
-    def matching_indexes(self, comparing_times_list):
+    def matching_indexes(self, comparing_times_list) -> int:
         match_found = False
         for gps_time, y in enumerate(self.gps_times):
             for other_index, z in enumerate(comparing_times_list):
@@ -108,7 +107,7 @@ class sentences:
                 if len(row) > 3:
                     self.sentence_confidence.append(float(row[3]))
 
-    def audio_start_time_from_path(self):
+    def audio_start_time_from_path(self) -> None:
         file_name = os.path.basename(self.sentence_path)
         day = int(file_name[12:14])
         month = int(file_name[10:12])
@@ -119,7 +118,7 @@ class sentences:
         combined = datetime(year, month, day, hours, minutes, seconds)
         self.audio_start_time = combined
 
-    def sentences_start_time_conversion(self):
+    def sentences_start_time_conversion(self) -> None:
         previous_time = 0
         plus_one = timedelta(seconds=1)
         for x in self.sentence_start:
@@ -143,7 +142,7 @@ class Temporary_data:
     position_lat_deg: float = None
     position_long_deg: float = None
 
-    def get_row_data_and_convert(self, row):
+    def get_row_data_and_convert(self, row) -> None:
         self.speed = float(row[25])
         time = float(row[4])  # - 55
         timestamp = datetime.fromtimestamp(time)
@@ -157,10 +156,27 @@ class Temporary_data:
         self.position_lat_deg = float(position_lat_semi_circles) * (180 / 2 ** 31)
         self.position_long_deg = float(position_long_semi_circles) * (180 / 2 ** 31)
 
+
+class shape_file_methods:
+    """Class to group the methods that are used to write data to the shape file"""
+
+    def store_mapping_data(self,feature, row_data) -> None:
+        feature.SetField("Speed", row_data.speed)
+        feature.SetField("Time", row_data.time)
+
+    def positonal_method(self,feature,layer,row_data) -> None:
+        wkt = f"POINT({row_data.position_long_deg} {row_data.position_lat_deg})"
+        # Create the point from the Well Known Txt
+        point = ogr.CreateGeometryFromWkt(wkt)
+        feature.SetGeometry(point)
+        layer.CreateFeature(feature)
+
+
 def analysis(inputFile, outputFile) -> None:
     """Main function here"""
 
     """Initialising all of the mapping necessities here"""
+
     driver = ogr.GetDriverByName("ESRI Shapefile")
     data_source = driver.CreateDataSource(outputFile)
     srs = osr.SpatialReference()
@@ -168,12 +184,10 @@ def analysis(inputFile, outputFile) -> None:
 
     # This name will change and be dependant on input files
     layer = data_source.CreateLayer(inputFile["sessionID"], srs, ogr.wkbPoint)
-    # Add the fields we're interested in
+
     field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
     field_name.SetWidth(24)
     layer.CreateField(field_name)
-    layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
@@ -203,6 +217,7 @@ def analysis(inputFile, outputFile) -> None:
 
     # Temporary row data class initialisation
     row_data = Temporary_data()
+    shape_file = shape_file_methods()
 
     with open(inputFile['gps']) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -212,11 +227,10 @@ def analysis(inputFile, outputFile) -> None:
                 row_data.get_row_data_and_convert(row)
 
                 feature = ogr.Feature(layer.GetLayerDefn())
-                feature.SetField("Speed", row_data.speed)
-                feature.SetField("Latitude", row_data.position_lat_deg)
-                feature.SetField("Longitude", row_data.position_long_deg)
-                feature.SetField("Time", row_data.time)
 
+                # Method to store the speed and time
+                shape_file.store_mapping_data(feature, row_data)
+                #adding time and speed to the csv appending list
                 csv_data = [row_data.time, row_data.speed]
 
                 if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
@@ -231,11 +245,9 @@ def analysis(inputFile, outputFile) -> None:
                     feature.SetField("BinSent", 0)
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
-                wkt = f"POINT({row_data.position_long_deg} {row_data.position_lat_deg})"
-                # Create the point from the Well Known Txt
-                point = ogr.CreateGeometryFromWkt(wkt)
-                feature.SetGeometry(point)
-                layer.CreateFeature(feature)
+
+                #do shapefile positional things
+                shape_file.positonal_method(feature, layer, row_data)
 
 
 
