@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 import time
 import sys
 import json
+import string
+from dataclasses import dataclass, field
 
 # examples of inputfile
 # inputFile= {
@@ -23,14 +25,14 @@ import json
 # }
 # My mac directories
 inputFile = {
-    'sessionID': 'Tommy 27th with subtract',  #
-    'gps': r"E:\UNI\Research_assistant\My test data\Tommy 27th\April-27.csv",  #
+    'sessionID': 'Tyler 1st May',  #
+    'gps': r"E:\UNI\Research_assistant\My test data\May 1st\May 1 Ride.csv",  #
 
   #  'emotions': r"E:\UNI\Research_assistant\My test data\Tommy 27th\emotion_data.txt",
     #
 
-    'audio_sentences': r"E:\UNI\Research_assistant\My test data\Tommy 27th\audio-20220427-073816.csv",
-    'audio_words': r"E:\UNI\Research_assistant\My test data\Tommy 27th\2704 individual words.csv",
+    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 1st\audio-20220501-154437.csv",
+    'audio_words': r"E:\UNI\Research_assistant\My test data\May 1st\0105-Individual words.csv",
 
     #'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
     #'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
@@ -39,7 +41,7 @@ inputFile = {
    # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
     # check code and debug/read through to determine
 
-#}
+}
 
 #inputFile = {
    # 'sessionID': 'Tyler quick ride on the 24th of April',  #
@@ -58,7 +60,7 @@ inputFile = {
 #    'empatica_TEMP': r"E:\UNI\Research_assistant\My test data\April 26th\TEMP.csv"
     # check code and debug/read through to determine
 
-}
+#}
 
 
 # Getting the time variable data from the file name (audio sentence transcription)
@@ -88,7 +90,7 @@ def gps_time_retrieval(gps_path):
                 if first_time_index_bool == True:
                     first_time_index = counter
                     first_time_index_bool = False
-                time_temp = float(row[4]) -55
+                time_temp = float(row[4]) #-55
                 time_temp = datetime.fromtimestamp(time_temp)
                 time_temp = str(time_temp.strftime('%H:%M:%S'))
                 gps_times.append(time_temp)
@@ -114,12 +116,19 @@ def saving_sentence_data(audio_path):
 
 def sentences_proper_time_value(start_or_end, audio_start):
     sentence_time_fixed = []
+    previous_time = 0
+    plus_one = timedelta(seconds=1)
     for x in start_or_end:
         word_time = float(x)
         word_time = round(word_time)
         plus_start = timedelta(seconds=word_time)
-        word_time = (audio_start + plus_start).strftime('%H:%M:%S')
-        sentence_time_fixed.append(word_time)
+        word_time = (audio_start + plus_start)
+        if (word_time == previous_time):
+            #this will prevent the instance of one number rounding up to a number and the next getting rounded down to the same number
+            word_time = word_time + plus_one
+
+        sentence_time_fixed.append(word_time.strftime('%H:%M:%S'))
+        previous_time = word_time
     return sentence_time_fixed
 
 
@@ -135,6 +144,8 @@ def matching_indexes(gps_times, other_times):
         if match_found:
             break
     return gps_index_match, other_index_match
+
+
 
 
 def analysis(inputFile, outputFile):
@@ -171,7 +182,7 @@ def analysis(inputFile, outputFile):
     # Gonna need to change output location and naming and all of that good stuff
     # mac directory
     # data_writer = open(r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/output/collated + ' + inputFile['sessionID'] + '.csv', 'w',newline='')
-    data_writer = open(r"E:\UNI\Research_assistant\My test data\April 26th\output2\ " + inputFile['sessionID'] + '.csv',
+    data_writer = open(r"E:\UNI\Research_assistant\My test data\May 1st\output\ " + inputFile['sessionID'] + '.csv',
                        'w', newline='')
     writer = csv.writer(data_writer)
     # csv_titles = ["Time", "Speed(m/s)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions","Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
@@ -179,12 +190,13 @@ def analysis(inputFile, outputFile):
     writer.writerow(csv_titles)
     # writer.writerow(sentences_start_time)
     # writer.writerow(sentences)
+
     with open(inputFile['gps']) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21] and row[27] == "temperature" and row[26] == "m/s":  # and float(row[25]) > 0: #and row[3] != "time_created"
                 speed = float(row[25])
-                time = float(row[4]) - 55
+                time = float(row[4]) #- 55
                 timestamp = datetime.fromtimestamp(time)
                 time_variable = timestamp.strftime('%H:%M:%S')
                 #long and lat
@@ -228,5 +240,5 @@ def analysis(inputFile, outputFile):
 #if __name__ == "__main__":
 # analysis()
 
-outputFile = r"E:\UNI\Research_assistant\My test data\Tommy 27th\output2withplustime"
+outputFile = r"E:\UNI\Research_assistant\My test data\May 1st\output"
 analysis(inputFile, outputFile)
