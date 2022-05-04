@@ -28,17 +28,17 @@ inputFile = {
     'sessionID': 'Tyler 1st May',  #
     'gps': r"E:\UNI\Research_assistant\My test data\May 1st\May 1 Ride.csv",  #
 
-  #  'emotions': r"E:\UNI\Research_assistant\My test data\Tommy 27th\emotion_data.txt",
+    #  'emotions': r"E:\UNI\Research_assistant\My test data\Tommy 27th\emotion_data.txt",
     #
 
     'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 1st\audio-20220501-154437.csv",
     'audio_words': r"E:\UNI\Research_assistant\My test data\May 1st\0105-Individual words.csv",
 
-    #'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    #'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
-    #'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
+    # 'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
+    # 'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
+    # 'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
     # Have I written these two empatica things in to be written?
-   # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
+    # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
     # check code and debug/read through to determine
 
 }
@@ -50,7 +50,7 @@ class gps:
     gps_times: list[str] = field(default_factory=list)
 
     def gps_time_retrieval(self) -> None:
-        #gps_times = []
+        # gps_times = []
         with open(self.gps_path) as bike_gps:
             gps_reader = csv.reader(bike_gps, delimiter=',')
             first_time_index_bool = True
@@ -62,15 +62,17 @@ class gps:
                     if first_time_index_bool:
                         first_time_index = counter
                         first_time_index_bool = False
-                    time_temp = float(row[4]) #-55
+                    time_temp = float(row[4])  # -55
                     time_temp = datetime.fromtimestamp(time_temp)
                     time_temp = str(time_temp.strftime('%H:%M:%S'))
                     self.gps_times.append(time_temp)
                 counter = counter + 1
         self.first_time_index = first_time_index
-        #return gps_times, first_time_index
+        # return gps_times, first_time_index
 
-    def matching_indexes(self, comparing_times_list) -> int:
+    def matching_indexes(self, comparing_times_list) -> tuple[int, int]:
+        other_index_match = None
+        gps_index_match = None
         match_found = False
         for gps_time, y in enumerate(self.gps_times):
             for other_index, z in enumerate(comparing_times_list):
@@ -95,7 +97,6 @@ class sentences:
     audio_start_time: datetime = None
     sentence_start_time: list[str] = field(default_factory=list)
     sentence_end_time: list[str] = field(default_factory=list)
-
 
     def saving_sentence_data(self) -> None:
         with open(self.sentence_path) as audio:
@@ -133,6 +134,45 @@ class sentences:
             self.sentence_start_time.append(word_time.strftime('%H:%M:%S'))
             previous_time = word_time
 
+    def save_sentences_csv_shape(self,csv_data,feature,sentence_gps_match_index) -> tuple[list, int]:
+        csv_data.append(self.sentences[sentence_gps_match_index])
+        feature.SetField("Sentence", self.sentences[sentence_gps_match_index])
+        feature.SetField("BinSent", 1)
+        return csv_data, sentence_gps_match_index
+
+    def no_sentence_to_save(self, csv_data, feature) -> list:
+        csv_data.append("N/A")
+        feature.SetField("Sentence", "N/A")
+        feature.SetField("BinSent", 0)
+        return csv_data
+
+@dataclass
+class emotions:
+    """Data class that stores the data from the emotions txt file and contains methods to retrieve it"""
+    file_path: str
+    emotions: list[str] = field(default_factory=list)
+    valence: list[str] = field(default_factory=list)
+    arousal: list[str] = field(default_factory=list)
+    times: list[str] = field(default_factory=list)
+
+    # Lists are done slightly differently so need to test this assigning out
+    def store_dominant_emotions(self):
+        with open(self.file_path) as emotion_data:
+            emotions_reader = csv.reader(emotion_data, delimiter=",")
+            counter = 0
+            for x in emotions_reader:
+                if counter == 0:
+                    self.emotions = x
+                    counter = counter + 1
+                elif counter == 1:
+                    self.valence = x
+                    counter = counter + 1
+                elif counter == 2:
+                    self.arousal = x
+                    counter = counter + 1
+                else:
+                    self.times = x
+
 
 @dataclass
 class Temporary_data:
@@ -160,11 +200,11 @@ class Temporary_data:
 class shape_file_methods:
     """Class to group the methods that are used to write data to the shape file"""
 
-    def store_mapping_data(self,feature, row_data) -> None:
+    def store_mapping_data(self, feature, row_data) -> None:
         feature.SetField("Speed", row_data.speed)
         feature.SetField("Time", row_data.time)
 
-    def positonal_method(self,feature,layer,row_data) -> None:
+    def positonal_method(self, feature, layer, row_data) -> None:
         wkt = f"POINT({row_data.position_long_deg} {row_data.position_lat_deg})"
         # Create the point from the Well Known Txt
         point = ogr.CreateGeometryFromWkt(wkt)
@@ -172,11 +212,11 @@ class shape_file_methods:
         layer.CreateFeature(feature)
 
 
+
 def analysis(inputFile, outputFile) -> None:
     """Main function here"""
 
     """Initialising all of the mapping necessities here"""
-
     driver = ogr.GetDriverByName("ESRI Shapefile")
     data_source = driver.CreateDataSource(outputFile)
     srs = osr.SpatialReference()
@@ -184,14 +224,13 @@ def analysis(inputFile, outputFile) -> None:
 
     # This name will change and be dependant on input files
     layer = data_source.CreateLayer(inputFile["sessionID"], srs, ogr.wkbPoint)
-
     field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
     field_name.SetWidth(24)
     layer.CreateField(field_name)
+    # Defining all fields that are values in the shape file
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
-
 
     # 1. Initialising GPS data
 
@@ -200,16 +239,29 @@ def analysis(inputFile, outputFile) -> None:
     # Calling method in class to extract times from the csv
     GPS.gps_time_retrieval()
     # 2. Initialising audio sentence data
-    Sentences = sentences(sentence_path=inputFile['audio_sentences'],individual_words_path=inputFile['audio_words'])
+
+    Sentences = sentences(sentence_path=inputFile['audio_sentences'], individual_words_path=inputFile['audio_words'])
     # Call method to extract first round of sentence data and the start time retrieving method
     Sentences.saving_sentence_data()
     Sentences.audio_start_time_from_path()
     Sentences.sentences_start_time_conversion()
     # Getting the indexes for where the sentences and gps times line up
-    gps_sentence_match_index,sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
+    gps_sentence_match_index, sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
 
-    data_writer = open(r"E:\UNI\Research_assistant\My test data\May 1st\output\ " + inputFile['sessionID'] + '.csv',
-                       'w', newline='')
+    # 3. Initialising the emotions data
+    Emotions = emotions(file_path=inputFile['emotions'])
+    # Calling method to store all data from the text file
+    Emotions.store_dominant_emotions()
+    # Getting indexes to see the time that emotions and gps times overlap
+    gps_emotions_match_index, emotions_gps_match_index = GPS.matching_indexes(Emotions.times)
+    #check if the indexes exist
+    if gps_emotions_match_index is None and emotions_gps_match_index is None:
+        print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
+        exit()
+
+    # 4. HRV retrieving
+
+    data_writer = open(outputFile + r"\ " + inputFile['sessionID'] + '.csv', 'w', newline='')
     writer = csv.writer(data_writer)
     # csv_titles = ["Time", "Speed(m/s)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions","Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
     csv_titles = ["Time", "speed (m/s)", "Sentence"]
@@ -222,7 +274,8 @@ def analysis(inputFile, outputFile) -> None:
     with open(inputFile['gps']) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
-            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21] and row[27] == "temperature" and row[26] == "m/s":  # and float(row[25]) > 0: #and row[3] != "time_created"
+            if row[2] == 'record' and row[0] == 'Data' and len(row) > 20 and row[10] != '' and row[21] and row[
+                27] == "temperature" and row[26] == "m/s":  # and float(row[25]) > 0: #and row[3] != "time_created"
                 # Methods saving necessary data and also making conversions where necessary
                 row_data.get_row_data_and_convert(row)
 
@@ -230,28 +283,23 @@ def analysis(inputFile, outputFile) -> None:
 
                 # Method to store the speed and time
                 shape_file.store_mapping_data(feature, row_data)
-                #adding time and speed to the csv appending list
+                # adding time and speed to the csv appending list
                 csv_data = [row_data.time, row_data.speed]
 
                 if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
-                    csv_data.append(Sentences.sentences[sentence_gps_match_index])
-                    feature.SetField("Sentence", Sentences.sentences[sentence_gps_match_index])
-                    feature.SetField("BinSent", 1)
+                    csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
                     sentence_gps_match_index = sentence_gps_match_index + 1
                 else:
                     # If there is no sentence to write
-                    csv_data.append("N/A")
-                    feature.SetField("Sentence", "N/A")
-                    feature.SetField("BinSent", 0)
+                    csv_data = Sentences.no_sentence_to_save(csv_data, feature)
+
+
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
 
-                #do shapefile positional things
+                # do shapefile positional things
                 shape_file.positonal_method(feature, layer, row_data)
-
-
 
 
 outputFile = r"E:\UNI\Research_assistant\My test data\May 1st\output"
 analysis(inputFile, outputFile)
-
