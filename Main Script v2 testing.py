@@ -28,7 +28,7 @@ inputFile = {
     'sessionID': 'Tyler 1st May',  #
     'gps': r"E:\UNI\Research_assistant\My test data\May 1st\May 1 Ride.csv",  #
 
-    #  'emotions': r"E:\UNI\Research_assistant\My test data\Tommy 27th\emotion_data.txt",
+    'emotions': r"",
     #
 
     'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 1st\audio-20220501-154437.csv",
@@ -138,6 +138,7 @@ class sentences:
         csv_data.append(self.sentences[sentence_gps_match_index])
         feature.SetField("Sentence", self.sentences[sentence_gps_match_index])
         feature.SetField("BinSent", 1)
+        sentence_gps_match_index += 1
         return csv_data, sentence_gps_match_index
 
     def no_sentence_to_save(self, csv_data, feature) -> list:
@@ -150,19 +151,22 @@ class sentences:
 class emotions:
     """Data class that stores the data from the emotions txt file and contains methods to retrieve it"""
     file_path: str
+    emotion_data_exists: bool = False
     emotions: list[str] = field(default_factory=list)
     valence: list[str] = field(default_factory=list)
     arousal: list[str] = field(default_factory=list)
     times: list[str] = field(default_factory=list)
 
+
     # Lists are done slightly differently so need to test this assigning out
-    def store_dominant_emotions(self):
+    def store_dominant_emotions(self) -> None:
         with open(self.file_path) as emotion_data:
             emotions_reader = csv.reader(emotion_data, delimiter=",")
             counter = 0
             for x in emotions_reader:
                 if counter == 0:
                     self.emotions = x
+                    self.emotion_data_exists = True
                     counter = counter + 1
                 elif counter == 1:
                     self.valence = x
@@ -173,17 +177,39 @@ class emotions:
                 else:
                     self.times = x
 
+    def write_available_emotions(self, csv_data, feature, emotions_gps_match_index) -> tuple[list, int]:
+        csv_data.append(self.emotions[emotions_gps_match_index])
+        csv_data.append(self.valence[emotions_gps_match_index])
+        csv_data.append(self.arousal[emotions_gps_match_index])
+        feature.SetField("Emotion", self.emotions[emotions_gps_match_index])
+        feature.SetField("Valence", self.valence[emotions_gps_match_index])
+        feature.SetField("Arousal", self.arousal[emotions_gps_match_index])
+        emotions_gps_match_index += 1
+        return csv_data, emotions_gps_match_index
+
+    def write_unavailable_emotions(self, csv_data, feature) -> list:
+        csv_data.append('N/A')
+        csv_data.append('N/A')
+        csv_data.append('N/A')
+        feature.SetField("Emotion", 'N/A')
+        feature.SetField("Valence", 'N/A')
+        feature.SetField("Arousal", 'N/A')
+        return csv_data
+
 
 @dataclass
 class Temporary_data:
     """This class temporarily stores all data that will be written into the CSV and the shape file"""
     speed: float = None
     time: str = None
+    altitude: float = None
     position_lat_deg: float = None
     position_long_deg: float = None
 
     def get_row_data_and_convert(self, row) -> None:
-        self.speed = float(row[25])
+        # x3.6 is to convert from m/s to km/h
+        self.speed = (float(row[25]))*3.6
+        self.altitude = (float(row[16]))
         time = float(row[4])  # - 55
         timestamp = datetime.fromtimestamp(time)
         time_variable = timestamp.strftime('%H:%M:%S')
@@ -203,6 +229,7 @@ class shape_file_methods:
     def store_mapping_data(self, feature, row_data) -> None:
         feature.SetField("Speed", row_data.speed)
         feature.SetField("Time", row_data.time)
+        feature.SetField("Altitude", row_data.altitude)
 
     def positonal_method(self, feature, layer, row_data) -> None:
         wkt = f"POINT({row_data.position_long_deg} {row_data.position_lat_deg})"
@@ -229,8 +256,12 @@ def analysis(inputFile, outputFile) -> None:
     layer.CreateField(field_name)
     # Defining all fields that are values in the shape file
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("Valence", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
 
     # 1. Initialising GPS data
 
@@ -249,22 +280,28 @@ def analysis(inputFile, outputFile) -> None:
     gps_sentence_match_index, sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
 
     # 3. Initialising the emotions data
+    # Check if emotions txt file exists
     Emotions = emotions(file_path=inputFile['emotions'])
-    # Calling method to store all data from the text file
-    Emotions.store_dominant_emotions()
-    # Getting indexes to see the time that emotions and gps times overlap
-    gps_emotions_match_index, emotions_gps_match_index = GPS.matching_indexes(Emotions.times)
-    #check if the indexes exist
-    if gps_emotions_match_index is None and emotions_gps_match_index is None:
-        print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
-        exit()
+    if inputFile['emotions'] != '':
+        # Calling method to store all data from the text file
+        Emotions.store_dominant_emotions()
+        # Getting indexes to see the time that emotions and gps times overlap
+        gps_emotions_match_index, emotions_gps_match_index = GPS.matching_indexes(Emotions.times)
+        # check if the indexes exist
+        if gps_emotions_match_index is None and emotions_gps_match_index is None:
+            print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
+            exit()
+    else:
+        emotions_gps_match_index = 0
+
 
     # 4. HRV retrieving
 
     data_writer = open(outputFile + r"\ " + inputFile['sessionID'] + '.csv', 'w', newline='')
     writer = csv.writer(data_writer)
-    # csv_titles = ["Time", "Speed(m/s)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions","Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
-    csv_titles = ["Time", "speed (m/s)", "Sentence"]
+    # csv_titles = ["Time", "Speed(km/h)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions"
+    # ,"Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
+    csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Emotion", "Valence", "Arousal"]
     writer.writerow(csv_titles)
 
     # Temporary row data class initialisation
@@ -284,14 +321,21 @@ def analysis(inputFile, outputFile) -> None:
                 # Method to store the speed and time
                 shape_file.store_mapping_data(feature, row_data)
                 # adding time and speed to the csv appending list
-                csv_data = [row_data.time, row_data.speed]
-
+                csv_data = [row_data.time, row_data.speed, row_data.altitude]
+                # Writing in sentence data
                 if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
                     csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
-                    sentence_gps_match_index = sentence_gps_match_index + 1
                 else:
                     # If there is no sentence to write
                     csv_data = Sentences.no_sentence_to_save(csv_data, feature)
+
+                # Writing in emotion data
+                # In case a file isn't provided this check is created to prevent bugs
+                if Emotions.emotion_data_exists:
+                    if row_data.time == Emotions.times[emotions_gps_match_index]:
+                        csv_data, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature, emotions_gps_match_index)
+                    else:
+                        csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
 
 
                 # Writing info to the CSV file and writing the coordinates to the shape file
