@@ -26,15 +26,15 @@ from dataclasses import dataclass, field
 # My mac directories
 inputFile = {
     'sessionID': 'Tyler 1st May',  #
-    'gps': r"E:\UNI\Research_assistant\My test data\May 1st\May 1 Ride.csv",  #
+    'gps': r"E:\UNI\Research_assistant\My test data\May 5th\2022-05-05-075456-ELEMNT BOLT 28D4-6-0.csv",  #
 
     'emotions': r"",
     #
 
-    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 1st\audio-20220501-154437.csv",
-    'audio_words': r"E:\UNI\Research_assistant\My test data\May 1st\0105-Individual words.csv",
+    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.txt",
+    'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\audio-words-05052022.csv",
 
-    # 'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
+    'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
     # 'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
     # 'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
     # Have I written these two empatica things in to be written?
@@ -151,7 +151,8 @@ class sentences:
 class emotions:
     """Data class that stores the data from the emotions txt file and contains methods to retrieve it"""
     file_path: str
-    emotion_data_exists: bool = False
+    list_length: int = 0
+    end_of_list: bool = False
     emotions: list[str] = field(default_factory=list)
     valence: list[str] = field(default_factory=list)
     arousal: list[str] = field(default_factory=list)
@@ -166,7 +167,6 @@ class emotions:
             for x in emotions_reader:
                 if counter == 0:
                     self.emotions = x
-                    self.emotion_data_exists = True
                     counter = counter + 1
                 elif counter == 1:
                     self.valence = x
@@ -176,6 +176,7 @@ class emotions:
                     counter = counter + 1
                 else:
                     self.times = x
+        self.list_length = len(self.emotions)
 
     def write_available_emotions(self, csv_data, feature, emotions_gps_match_index) -> tuple[list, int]:
         csv_data.append(self.emotions[emotions_gps_match_index])
@@ -191,10 +192,14 @@ class emotions:
         csv_data.append('N/A')
         csv_data.append('N/A')
         csv_data.append('N/A')
-        feature.SetField("Emotion", 'N/A')
-        feature.SetField("Valence", 'N/A')
-        feature.SetField("Arousal", 'N/A')
+        feature.SetField("Emotion", None)
+        feature.SetField("Valence", None)
+        feature.SetField("Arousal", None)
         return csv_data
+
+    def end_of_list_check(self, emotions_gps_match_index) -> None:
+        if ((emotions_gps_match_index + 1) == self.list_length):
+            self.end_of_list = True
 
 
 @dataclass
@@ -263,6 +268,11 @@ def analysis(inputFile, outputFile) -> None:
     layer.CreateField(ogr.FieldDefn("Valence", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
 
+    sentences_exist = False
+    emotions_exists = False
+    hrv_exists = False
+    empatica_exists = False
+
     # 1. Initialising GPS data
 
     # Initiating the GPS class
@@ -273,16 +283,20 @@ def analysis(inputFile, outputFile) -> None:
 
     Sentences = sentences(sentence_path=inputFile['audio_sentences'], individual_words_path=inputFile['audio_words'])
     # Call method to extract first round of sentence data and the start time retrieving method
-    Sentences.saving_sentence_data()
-    Sentences.audio_start_time_from_path()
-    Sentences.sentences_start_time_conversion()
-    # Getting the indexes for where the sentences and gps times line up
-    gps_sentence_match_index, sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
+    if inputFile['audio_sentences'] != '':
+        sentences_exist = True
+        Sentences.saving_sentence_data()
+        Sentences.audio_start_time_from_path()
+        Sentences.sentences_start_time_conversion()
+        # Getting the indexes for where the sentences and gps times line up
+        gps_sentence_match_index, sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
+
 
     # 3. Initialising the emotions data
     # Check if emotions txt file exists
     Emotions = emotions(file_path=inputFile['emotions'])
     if inputFile['emotions'] != '':
+        emotions_exists = True
         # Calling method to store all data from the text file
         Emotions.store_dominant_emotions()
         # Getting indexes to see the time that emotions and gps times overlap
@@ -323,21 +337,28 @@ def analysis(inputFile, outputFile) -> None:
                 # adding time and speed to the csv appending list
                 csv_data = [row_data.time, row_data.speed, row_data.altitude]
                 # Writing in sentence data
-                if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
-                    csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
+                if sentences_exist:
+                    if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
+                        csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
+                    else:
+                        # If there is no sentence to write
+                        csv_data = Sentences.no_sentence_to_save(csv_data, feature)
                 else:
-                    # If there is no sentence to write
                     csv_data = Sentences.no_sentence_to_save(csv_data, feature)
-
                 # Writing in emotion data
                 # In case a file isn't provided this check is created to prevent bugs
-                if Emotions.emotion_data_exists:
+                if emotions_exists and Emotions.end_of_list == False:
                     if row_data.time == Emotions.times[emotions_gps_match_index]:
                         csv_data, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature, emotions_gps_match_index)
                     else:
+                        #might not need this else at all now
                         csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
 
+                else:
+                    csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
 
+                # Need to check if the emotion just written in is the last one in the list
+                Emotions.end_of_list_check(emotions_gps_match_index)
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
 
@@ -345,5 +366,5 @@ def analysis(inputFile, outputFile) -> None:
                 shape_file.positonal_method(feature, layer, row_data)
 
 
-outputFile = r"E:\UNI\Research_assistant\My test data\May 1st\output"
+outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"
 analysis(inputFile, outputFile)
