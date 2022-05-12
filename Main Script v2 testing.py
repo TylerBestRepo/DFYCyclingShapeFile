@@ -215,7 +215,7 @@ class Temporary_data:
         # x3.6 is to convert from m/s to km/h
         self.speed = (float(row[25]))*3.6
         self.altitude = (float(row[16]))
-        time = float(row[4])  # - 55
+        time = float(row[4])  # - 55 This is for the common issue of the gps time being out of sync by roughly a minute
         timestamp = datetime.fromtimestamp(time)
         time_variable = timestamp.strftime('%H:%M:%S')
         self.time = time_variable
