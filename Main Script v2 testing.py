@@ -25,22 +25,24 @@ from dataclasses import dataclass, field
 # }
 # My mac directories
 inputFile = {
-    'sessionID': 'Tyler 1st May',  #
-    'gps': r"E:\UNI\Research_assistant\My test data\May 5th\2022-05-05-075456-ELEMNT BOLT 28D4-6-0.csv",  #
+    'sessionID': 'Tyler 5th May',  #
+    'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  #
 
-    'emotions': r"",
-    #
+    'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
 
-    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.txt",
-    'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\audio-words-05052022.csv",
+
+    'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
+    'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
+
+    #'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 6th Tommy/audio-20220506-072628.csv",
+    #'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 6th Tommy/words.csv",
 
     'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    # 'HRV_path': r'/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/eSense Pulse data from 14.04.22 17_59_22.csv',
+    'HRV_path': '',#"/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/heart rate data Tyler.csv",
     # 'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
     # Have I written these two empatica things in to be written?
     # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
     # check code and debug/read through to determine
-
 }
 
 
@@ -83,13 +85,15 @@ class gps:
                     break
             if match_found:
                 break
-        return gps_index_match, other_index_match
+        return other_index_match
 
 
 @dataclass
 class sentences:
     sentence_path: str
     individual_words_path: str
+    list_length: int = 0
+    end_of_list: bool = False
     sentence_start: list[str] = field(default_factory=list)
     sentence_end: list[str] = field(default_factory=list)
     sentences: list[str] = field(default_factory=list)
@@ -100,13 +104,16 @@ class sentences:
 
     def saving_sentence_data(self) -> None:
         with open(self.sentence_path) as audio:
-            emotions_reader = csv.reader(audio, delimiter=",")
-            for row in emotions_reader:
-                self.sentence_start.append(float(row[0]))
-                self.sentence_end.append(float(row[1]))
-                self.sentences.append(row[2])
-                if len(row) > 3:
-                    self.sentence_confidence.append(float(row[3]))
+            sentence_reader = csv.reader(audio, delimiter=",")
+            for row in sentence_reader:
+                if (row[0] != "start_time"):
+                    self.sentence_start.append(float(row[0]))
+                    self.sentence_end.append(float(row[1]))
+                    self.sentences.append(row[2])
+                    # In case confidences are not contained the in csv input file
+                    if len(row) > 3:
+                        self.sentence_confidence.append(float(row[3]))
+        self.list_length = len(self.sentences)
 
     def audio_start_time_from_path(self) -> None:
         file_name = os.path.basename(self.sentence_path)
@@ -146,6 +153,22 @@ class sentences:
         feature.SetField("Sentence", "N/A")
         feature.SetField("BinSent", 0)
         return csv_data
+
+    def end_of_list_check(self, sentence_gps_match_index) -> None:
+        if ((sentence_gps_match_index + 1) == self.list_length):
+            self.end_of_list = True
+
+    def audio_start_time_from_path(self) -> str:
+        file_name = os.path.basename(self.sentence_path)
+        day = int(file_name[12:14])
+        month = int(file_name[10:12])
+        year = int(file_name[6:10])
+        hours = int(file_name[15:17])
+        minutes = int(file_name[17:19])
+        seconds = int(file_name[19:21])
+        combined = datetime(year, month, day, hours, minutes, seconds)
+        self.audio_start_time = combined
+        return combined
 
 @dataclass
 class emotions:
@@ -213,8 +236,10 @@ class Temporary_data:
 
     def get_row_data_and_convert(self, row) -> None:
         # x3.6 is to convert from m/s to km/h
-        self.speed = (float(row[25]))*3.6
-        self.altitude = (float(row[16]))
+        speed = (float(row[25]))*3.6
+        self.speed = round(speed,2)
+        altitude = float(row[16])
+        self.altitude = (round(altitude))
         time = float(row[4])  # - 55 This is for the common issue of the gps time being out of sync by roughly a minute
         timestamp = datetime.fromtimestamp(time)
         time_variable = timestamp.strftime('%H:%M:%S')
@@ -243,6 +268,150 @@ class shape_file_methods:
         feature.SetGeometry(point)
         layer.CreateFeature(feature)
 
+@dataclass
+class individual_words:
+    """This class stores the individually spoken words as well as the functions to retrieve them"""
+    audio_start_time: str
+    file_path: str
+    dict_path: str
+    list_length: int = 0
+    end_of_list: bool = False
+    times_and_words: list[str] = field(default_factory=list)
+    times: list[str] = field(default_factory=list)
+    word_dictionary: list[str] = field(default_factory=list)
+    dict_words_used_and_times: list[str] = field(default_factory=list)
+
+
+    def storing_individual_transcribed_words_get_dictionary(self):
+        with open(self.dict_path) as dict:
+            dict_reader = csv.reader(dict)
+            for list_of_words in dict_reader:
+                word_dictionary = list_of_words
+        times_words = []
+        with open(self.file_path) as transcribed_words:
+            word_reader = csv.reader(transcribed_words)
+            for individual_words in word_reader:
+                if not individual_words[0].isalnum() and not individual_words[2] == 'alternatives':
+                    if not individual_words[3] == 'punctuation':
+                        word_time = float(individual_words[0])
+                        plus_start = timedelta(seconds=word_time)
+                        word_time = (self.audio_start_time + plus_start).strftime('%H:%M:%S')
+                        json_style = individual_words[2]
+                        # a lot of hard coding to get it to format the string to json style right but it looks like it works
+                        json_style = json_style.replace('[', '')
+                        json_style = json_style.replace(']', '')
+                        json_style = json_style.replace("': '", '": "')
+                        json_style = json_style.replace("{'", '{"')
+                        json_style = json_style.replace("'}", '"}')
+                        json_style = json_style.replace("', '", '", "')
+                        json_style = json_style.replace("': ", '": ')
+                        parsed = json.loads(json_style)
+                        time_and_word_temp = [word_time, parsed["content"]]
+                        times_words.append(time_and_word_temp)
+        
+        self.times_and_words = times_words
+        self.word_dictionary = word_dictionary
+
+    def dictionary_words_used(self):
+        words_used_with_times = []
+        index = 0
+        dict_length = len(self.word_dictionary)
+        dict_index = 0
+        for words in self.times_and_words:
+            current_word = words[1]
+            while dict_index < dict_length:
+                dict_word_length = str(self.word_dictionary[dict_index])
+                dict_word_length = len(dict_word_length)
+                current_word_length = len(current_word)
+                current_word = current_word.lower()
+                # checking to see if the words are the same length alleviates the correct word within a longer word issue
+                if current_word in self.word_dictionary[dict_index] and current_word_length == dict_word_length:
+                    info_saving = [self.times_and_words[index][0], self.word_dictionary[dict_index], dict_index]
+                    words_used_with_times.append(info_saving)
+                    self.times.append(self.times_and_words[index][0])
+                dict_index = dict_index + 1
+            dict_index = 0
+            index = index + 1
+        
+        self.dict_words_used_and_times = words_used_with_times
+        self.list_length = len(self.times)
+
+    def save_dictWords_csv_shape(self,csv_data,feature,words_gps_match_index) -> tuple[list, int]:
+        csv_data.append(self.times_and_words[words_gps_match_index][1])
+        feature.SetField("Dictionary", self.times_and_words[words_gps_match_index][1])
+        feature.SetField("DictBinary", 1)
+        words_gps_match_index += 1
+        return csv_data, words_gps_match_index
+
+    def no_sentence_to_save(self, csv_data, feature) -> list:
+        csv_data.append("N/A")
+        feature.SetField("Dictionary", "N/A")
+        feature.SetField("DictBinary", 0)
+        return csv_data
+
+    def end_of_list_check(self, words_gps_match_index) -> None:
+        if (words_gps_match_index != None):
+            if ((words_gps_match_index + 1) == self.list_length):
+                self.end_of_list = True
+
+@dataclass
+class hrv:
+    path: str
+    list_length: int = 0
+    end_of_list: bool = False
+    heart_rate: list[str] = field(default_factory=list)
+    rr_interval: list[str] = field(default_factory=list)
+    times: list[str] = field(default_factory=list)
+
+    def get_hrv_data(self):
+        with open(self.path) as hrv:
+            hrv_reader = csv.reader(hrv, delimiter=";")
+            for row in hrv_reader:
+                if not row[0].isalnum():
+                    if not row[0] == '':
+                        row_test = row[0][0]
+                        if not row_test.isalpha():
+                            time_elapsed = float(row[0])
+                            heart_rate = float(row[1])
+                            rr_interval = float(row[2])
+                            #hrv_amplitude = float(row[3])
+                            #regularity = float(row[4])
+                            timestamp = row[5]
+                            hours = int(timestamp[0:2])
+                            minutes = int(timestamp[3:5])
+                            seconds = int(timestamp[6:8])
+                            annoying = [2021, 1, 5]
+                            timestamp = datetime(annoying[0], annoying[1], annoying[2], hours, minutes,
+                                                 seconds).strftime('%H:%M:%S')
+
+                            self.times.append(timestamp)
+                            self.heart_rate.append(heart_rate)
+                            self.rr_interval.append(rr_interval)
+
+                            self.list_length = len(self.times)
+        print("need a breakpoint spot")
+
+    def write_available_HRV(self,csv_data,feature,hrv_gps_match_index) -> tuple[list, int]:
+        csv_data.append(self.heart_rate[hrv_gps_match_index])
+        csv_data.append(self.rr_interval[hrv_gps_match_index])
+
+        feature.SetField("Heart Rate", self.heart_rate[hrv_gps_match_index])
+        feature.SetField("RR Interval", self.rr_interval[hrv_gps_match_index])
+
+        hrv_gps_match_index += 1
+        return csv_data, hrv_gps_match_index
+
+    def no_hrv_to_write(self,csv_data,hrv_gps_match_index) -> tuple[list, int]:
+        csv_data.append("N/A")
+        csv_data.append("N/A")
+
+        hrv_gps_match_index += 1
+        return csv_data, hrv_gps_match_index
+
+    def end_of_list_check(self, hrv_gps_match_index) -> None:
+        if (hrv_gps_match_index != None):
+            if ((hrv_gps_match_index + 1) == self.list_length):
+                self.end_of_list = True                       
 
 
 def analysis(inputFile, outputFile) -> None:
@@ -256,19 +425,29 @@ def analysis(inputFile, outputFile) -> None:
 
     # This name will change and be dependant on input files
     layer = data_source.CreateLayer(inputFile["sessionID"], srs, ogr.wkbPoint)
-    field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
-    field_name.SetWidth(24)
-    layer.CreateField(field_name)
+    #field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
+    #field_name.SetWidth(24)
+    #layer.CreateField(field_name)
     # Defining all fields that are values in the shape file
+    layer.CreateField(ogr.FieldDefn("Speed", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Altitude", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
+
+    layer.CreateField(ogr.FieldDefn("Dictionary", ogr.OFTString))
+    layer.CreateField(ogr.FieldDefn("DictBinary",ogr.OFTReal))
+
     layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
     layer.CreateField(ogr.FieldDefn("Valence", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
 
+    layer.CreateField(ogr.FieldDefn("Heart Rate", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("RR Interval", ogr.OFTReal))
+    
+
     sentences_exist = False
+    words_exist = False
     emotions_exists = False
     hrv_exists = False
     empatica_exists = False
@@ -289,9 +468,18 @@ def analysis(inputFile, outputFile) -> None:
         Sentences.audio_start_time_from_path()
         Sentences.sentences_start_time_conversion()
         # Getting the indexes for where the sentences and gps times line up
-        gps_sentence_match_index, sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
+        sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
 
-
+        if inputFile['audio_words'] != '':
+            words_exist = True
+            start_time = Sentences.audio_start_time
+            Words = individual_words(audio_start_time=start_time,file_path=inputFile['audio_words'],dict_path=inputFile['dictionary_path'])
+            Words.storing_individual_transcribed_words_get_dictionary()
+            # Run through function to check if any dictionary words were used
+            Words.dictionary_words_used()
+            # Function to check if the first dictionary words used falls within the gps frame
+            words_gps_match_index = GPS.matching_indexes(Words.times)
+            
     # 3. Initialising the emotions data
     # Check if emotions txt file exists
     Emotions = emotions(file_path=inputFile['emotions'])
@@ -300,9 +488,9 @@ def analysis(inputFile, outputFile) -> None:
         # Calling method to store all data from the text file
         Emotions.store_dominant_emotions()
         # Getting indexes to see the time that emotions and gps times overlap
-        gps_emotions_match_index, emotions_gps_match_index = GPS.matching_indexes(Emotions.times)
+        emotions_gps_match_index = GPS.matching_indexes(Emotions.times)
         # check if the indexes exist
-        if gps_emotions_match_index is None and emotions_gps_match_index is None:
+        if emotions_gps_match_index is None:
             print(f"GPS times and emotions times have no overlaps. Must have input wrong files")
             exit()
     else:
@@ -310,12 +498,27 @@ def analysis(inputFile, outputFile) -> None:
 
 
     # 4. HRV retrieving
+    if (inputFile['HRV_path'] != ''):
+        hrv_exists = True
+        HRV = hrv(inputFile['HRV_path'])
+        HRV.get_hrv_data()
+        hrv_gps_match_index = GPS.matching_indexes(HRV.times)
+        # check if the indexes exist
+        if hrv_gps_match_index is None:
+            print(f"GPS times and HRV times have no overlaps. Must have input wrong files")
+            exit()
+    else:
+        hrv_gps_match_index = 0
+        
 
-    data_writer = open(outputFile + r"\ " + inputFile['sessionID'] + '.csv', 'w', newline='')
+
+
+
+    data_writer = open(outputFile + '/' + inputFile['sessionID'] + '.csv', 'w', newline='')
     writer = csv.writer(data_writer)
     # csv_titles = ["Time", "Speed(km/h)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions"
     # ,"Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
-    csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Emotion", "Valence", "Arousal"]
+    csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Dictionary Word", "Emotion", "Valence", "Arousal","Heart Rate", "RR Interval"]
     writer.writerow(csv_titles)
 
     # Temporary row data class initialisation
@@ -337,7 +540,7 @@ def analysis(inputFile, outputFile) -> None:
                 # adding time and speed to the csv appending list
                 csv_data = [row_data.time, row_data.speed, row_data.altitude]
                 # Writing in sentence data
-                if sentences_exist:
+                if sentences_exist and Sentences.end_of_list == False:
                     if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
                         csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
                     else:
@@ -345,6 +548,19 @@ def analysis(inputFile, outputFile) -> None:
                         csv_data = Sentences.no_sentence_to_save(csv_data, feature)
                 else:
                     csv_data = Sentences.no_sentence_to_save(csv_data, feature)
+
+                # GOTTA FINISH WRITING IN THIS ONE, PROLLY ONLY 60% DONE
+                if words_exist and words_gps_match_index != None:
+                    if row_data.time == Words.times[words_gps_match_index]:
+                        csv_data, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature, words_gps_match_index)
+                    else:
+                        csv_data, feature = Words.no_sentence_to_save(csv_data,feature)
+                else:
+                    # Would call same method from words class but that classes creation is dependant on the words file existing
+                    csv_data.append("N/A")
+                    feature.SetField("Dictionary", "N/A")
+                    feature.SetField("DictBinary", 0)
+
                 # Writing in emotion data
                 # In case a file isn't provided this check is created to prevent bugs
                 if emotions_exists and Emotions.end_of_list == False:
@@ -353,12 +569,34 @@ def analysis(inputFile, outputFile) -> None:
                     else:
                         #might not need this else at all now
                         csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
-
                 else:
                     csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
 
-                # Need to check if the emotion just written in is the last one in the list
-                Emotions.end_of_list_check(emotions_gps_match_index)
+
+                if hrv_exists and HRV.end_of_list == False:
+                    if row_data.time == HRV.times[hrv_gps_match_index]:
+                        csv_data, hrv_gps_match_index = HRV.write_available_HRV(csv_data, feature, hrv_gps_match_index)
+                    else:
+                        #might not need this else at all now
+                        csv_data = HRV.no_hrv_to_write(csv_data, hrv_gps_match_index)
+                else:
+                    # HRV file doesnt exist if this is entered
+                    csv_data.append("N/A")
+                    csv_data.append("N/A")
+                    
+
+                # Need to check if the emotion just written in is the last one in the list same as sentences
+                if (emotions_exists):
+                    Emotions.end_of_list_check(emotions_gps_match_index)
+                if (sentences_exist):
+                    Sentences.end_of_list_check(sentence_gps_match_index)
+                if (words_exist):
+                    Words.end_of_list_check(words_gps_match_index)
+                if (hrv_exists):
+                    HRV.end_of_list_check(hrv_gps_match_index)
+
+                
+                
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
 
@@ -366,5 +604,10 @@ def analysis(inputFile, outputFile) -> None:
                 shape_file.positonal_method(feature, layer, row_data)
 
 
-outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"
+#outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
+
+#My data path
+#outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
+#Tommy data path
+outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" 
 analysis(inputFile, outputFile)
