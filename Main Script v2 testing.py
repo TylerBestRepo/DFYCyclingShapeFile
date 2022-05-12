@@ -26,19 +26,20 @@ from dataclasses import dataclass, field
 # My mac directories
 inputFile = {
     'sessionID': 'Tyler 5th May',  #
-    'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  #
+    # 'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  #
+    'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
 
-    'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
+    # 'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
+    'emotions': r"E:\UNI\Research_assistant\My test data\May 5th\emotions may 5th.txt",
 
+    # 'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
+    # 'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
 
-    'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
-    'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
-
-    #'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 6th Tommy/audio-20220506-072628.csv",
-    #'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 6th Tommy/words.csv",
+    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.csv",
+    'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\word.csv",
 
     'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': '',#"/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/heart rate data Tyler.csv",
+    'HRV_path': r"E:\UNI\Research_assistant\My test data\May 5th\hrv.csv",
     # 'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
     # Have I written these two empatica things in to be written?
     # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
@@ -141,7 +142,7 @@ class sentences:
             self.sentence_start_time.append(word_time.strftime('%H:%M:%S'))
             previous_time = word_time
 
-    def save_sentences_csv_shape(self,csv_data,feature,sentence_gps_match_index) -> tuple[list, int]:
+    def save_sentences_csv_shape(self, csv_data, feature, sentence_gps_match_index) -> tuple[list, int]:
         csv_data.append(self.sentences[sentence_gps_match_index])
         feature.SetField("Sentence", self.sentences[sentence_gps_match_index])
         feature.SetField("BinSent", 1)
@@ -170,6 +171,7 @@ class sentences:
         self.audio_start_time = combined
         return combined
 
+
 @dataclass
 class emotions:
     """Data class that stores the data from the emotions txt file and contains methods to retrieve it"""
@@ -180,7 +182,6 @@ class emotions:
     valence: list[str] = field(default_factory=list)
     arousal: list[str] = field(default_factory=list)
     times: list[str] = field(default_factory=list)
-
 
     # Lists are done slightly differently so need to test this assigning out
     def store_dominant_emotions(self) -> None:
@@ -236,8 +237,8 @@ class Temporary_data:
 
     def get_row_data_and_convert(self, row) -> None:
         # x3.6 is to convert from m/s to km/h
-        speed = (float(row[25]))*3.6
-        self.speed = round(speed,2)
+        speed = (float(row[25])) * 3.6
+        self.speed = round(speed, 2)
         altitude = float(row[16])
         self.altitude = (round(altitude))
         time = float(row[4])  # - 55 This is for the common issue of the gps time being out of sync by roughly a minute
@@ -268,6 +269,7 @@ class shape_file_methods:
         feature.SetGeometry(point)
         layer.CreateFeature(feature)
 
+
 @dataclass
 class individual_words:
     """This class stores the individually spoken words as well as the functions to retrieve them"""
@@ -280,7 +282,6 @@ class individual_words:
     times: list[str] = field(default_factory=list)
     word_dictionary: list[str] = field(default_factory=list)
     dict_words_used_and_times: list[str] = field(default_factory=list)
-
 
     def storing_individual_transcribed_words_get_dictionary(self):
         with open(self.dict_path) as dict:
@@ -308,7 +309,7 @@ class individual_words:
                         parsed = json.loads(json_style)
                         time_and_word_temp = [word_time, parsed["content"]]
                         times_words.append(time_and_word_temp)
-        
+
         self.times_and_words = times_words
         self.word_dictionary = word_dictionary
 
@@ -332,11 +333,11 @@ class individual_words:
                 dict_index = dict_index + 1
             dict_index = 0
             index = index + 1
-        
+
         self.dict_words_used_and_times = words_used_with_times
         self.list_length = len(self.times)
 
-    def save_dictWords_csv_shape(self,csv_data,feature,words_gps_match_index) -> tuple[list, int]:
+    def save_dictWords_csv_shape(self, csv_data, feature, words_gps_match_index) -> tuple[list, int]:
         csv_data.append(self.times_and_words[words_gps_match_index][1])
         feature.SetField("Dictionary", self.times_and_words[words_gps_match_index][1])
         feature.SetField("DictBinary", 1)
@@ -354,13 +355,14 @@ class individual_words:
             if ((words_gps_match_index + 1) == self.list_length):
                 self.end_of_list = True
 
+
 @dataclass
 class hrv:
     path: str
     list_length: int = 0
     end_of_list: bool = False
-    heart_rate: list[str] = field(default_factory=list)
-    rr_interval: list[str] = field(default_factory=list)
+    heart_rate: list[float] = field(default_factory=list)
+    rr_interval: list[float] = field(default_factory=list)
     times: list[str] = field(default_factory=list)
 
     def get_hrv_data(self):
@@ -374,8 +376,8 @@ class hrv:
                             time_elapsed = float(row[0])
                             heart_rate = float(row[1])
                             rr_interval = float(row[2])
-                            #hrv_amplitude = float(row[3])
-                            #regularity = float(row[4])
+                            # hrv_amplitude = float(row[3])
+                            # regularity = float(row[4])
                             timestamp = row[5]
                             hours = int(timestamp[0:2])
                             minutes = int(timestamp[3:5])
@@ -391,7 +393,7 @@ class hrv:
                             self.list_length = len(self.times)
         print("need a breakpoint spot")
 
-    def write_available_HRV(self,csv_data,feature,hrv_gps_match_index) -> tuple[list, int]:
+    def write_available_HRV(self, csv_data, feature, hrv_gps_match_index) -> tuple[list, int]:
         csv_data.append(self.heart_rate[hrv_gps_match_index])
         csv_data.append(self.rr_interval[hrv_gps_match_index])
 
@@ -401,7 +403,7 @@ class hrv:
         hrv_gps_match_index += 1
         return csv_data, hrv_gps_match_index
 
-    def no_hrv_to_write(self,csv_data,hrv_gps_match_index) -> tuple[list, int]:
+    def no_hrv_to_write(self, csv_data, hrv_gps_match_index) -> tuple[list, int]:
         csv_data.append("N/A")
         csv_data.append("N/A")
 
@@ -409,9 +411,9 @@ class hrv:
         return csv_data, hrv_gps_match_index
 
     def end_of_list_check(self, hrv_gps_match_index) -> None:
-        if (hrv_gps_match_index != None):
-            if ((hrv_gps_match_index + 1) == self.list_length):
-                self.end_of_list = True                       
+        if hrv_gps_match_index != None:
+            if (hrv_gps_match_index + 1) == self.list_length:
+                self.end_of_list = True
 
 
 def analysis(inputFile, outputFile) -> None:
@@ -425,9 +427,9 @@ def analysis(inputFile, outputFile) -> None:
 
     # This name will change and be dependant on input files
     layer = data_source.CreateLayer(inputFile["sessionID"], srs, ogr.wkbPoint)
-    #field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
-    #field_name.SetWidth(24)
-    #layer.CreateField(field_name)
+    # field_name = ogr.FieldDefn("Speed", ogr.OFTReal)
+    # field_name.SetWidth(24)
+    # layer.CreateField(field_name)
     # Defining all fields that are values in the shape file
     layer.CreateField(ogr.FieldDefn("Speed", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Time", ogr.OFTString))
@@ -435,7 +437,7 @@ def analysis(inputFile, outputFile) -> None:
     layer.CreateField(ogr.FieldDefn("Sentence", ogr.OFTString))
 
     layer.CreateField(ogr.FieldDefn("Dictionary", ogr.OFTString))
-    layer.CreateField(ogr.FieldDefn("DictBinary",ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("DictBinary", ogr.OFTReal))
 
     layer.CreateField(ogr.FieldDefn("BinSent", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("Emotion", ogr.OFTString))
@@ -444,7 +446,6 @@ def analysis(inputFile, outputFile) -> None:
 
     layer.CreateField(ogr.FieldDefn("Heart Rate", ogr.OFTReal))
     layer.CreateField(ogr.FieldDefn("RR Interval", ogr.OFTReal))
-    
 
     sentences_exist = False
     words_exist = False
@@ -473,13 +474,14 @@ def analysis(inputFile, outputFile) -> None:
         if inputFile['audio_words'] != '':
             words_exist = True
             start_time = Sentences.audio_start_time
-            Words = individual_words(audio_start_time=start_time,file_path=inputFile['audio_words'],dict_path=inputFile['dictionary_path'])
+            Words = individual_words(audio_start_time=start_time, file_path=inputFile['audio_words'],
+                                     dict_path=inputFile['dictionary_path'])
             Words.storing_individual_transcribed_words_get_dictionary()
             # Run through function to check if any dictionary words were used
             Words.dictionary_words_used()
             # Function to check if the first dictionary words used falls within the gps frame
             words_gps_match_index = GPS.matching_indexes(Words.times)
-            
+
     # 3. Initialising the emotions data
     # Check if emotions txt file exists
     Emotions = emotions(file_path=inputFile['emotions'])
@@ -496,7 +498,6 @@ def analysis(inputFile, outputFile) -> None:
     else:
         emotions_gps_match_index = 0
 
-
     # 4. HRV retrieving
     if (inputFile['HRV_path'] != ''):
         hrv_exists = True
@@ -509,16 +510,13 @@ def analysis(inputFile, outputFile) -> None:
             exit()
     else:
         hrv_gps_match_index = 0
-        
-
-
-
 
     data_writer = open(outputFile + '/' + inputFile['sessionID'] + '.csv', 'w', newline='')
     writer = csv.writer(data_writer)
     # csv_titles = ["Time", "Speed(km/h)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions"
     # ,"Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
-    csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Dictionary Word", "Emotion", "Valence", "Arousal","Heart Rate", "RR Interval"]
+    csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Dictionary Word", "Emotion", "Valence",
+                  "Arousal", "Heart Rate", "RR Interval"]
     writer.writerow(csv_titles)
 
     # Temporary row data class initialisation
@@ -542,7 +540,8 @@ def analysis(inputFile, outputFile) -> None:
                 # Writing in sentence data
                 if sentences_exist and Sentences.end_of_list == False:
                     if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
-                        csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature, sentence_gps_match_index)
+                        csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature,
+                                                                                                sentence_gps_match_index)
                     else:
                         # If there is no sentence to write
                         csv_data = Sentences.no_sentence_to_save(csv_data, feature)
@@ -552,9 +551,10 @@ def analysis(inputFile, outputFile) -> None:
                 # GOTTA FINISH WRITING IN THIS ONE, PROLLY ONLY 60% DONE
                 if words_exist and words_gps_match_index != None:
                     if row_data.time == Words.times[words_gps_match_index]:
-                        csv_data, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature, words_gps_match_index)
+                        csv_data, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature,
+                                                                                         words_gps_match_index)
                     else:
-                        csv_data, feature = Words.no_sentence_to_save(csv_data,feature)
+                        csv_data, feature = Words.no_sentence_to_save(csv_data, feature)
                 else:
                     # Would call same method from words class but that classes creation is dependant on the words file existing
                     csv_data.append("N/A")
@@ -565,38 +565,35 @@ def analysis(inputFile, outputFile) -> None:
                 # In case a file isn't provided this check is created to prevent bugs
                 if emotions_exists and Emotions.end_of_list == False:
                     if row_data.time == Emotions.times[emotions_gps_match_index]:
-                        csv_data, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature, emotions_gps_match_index)
+                        csv_data, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature,
+                                                                                               emotions_gps_match_index)
                     else:
-                        #might not need this else at all now
+                        # might not need this else at all now
                         csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
                 else:
                     csv_data = Emotions.write_unavailable_emotions(csv_data, feature)
-
 
                 if hrv_exists and HRV.end_of_list == False:
                     if row_data.time == HRV.times[hrv_gps_match_index]:
                         csv_data, hrv_gps_match_index = HRV.write_available_HRV(csv_data, feature, hrv_gps_match_index)
                     else:
-                        #might not need this else at all now
-                        csv_data = HRV.no_hrv_to_write(csv_data, hrv_gps_match_index)
+                        # might not need this else at all now
+                        csv_data, hrv_gps_match_index = HRV.no_hrv_to_write(csv_data, hrv_gps_match_index)
                 else:
                     # HRV file doesnt exist if this is entered
                     csv_data.append("N/A")
                     csv_data.append("N/A")
-                    
 
                 # Need to check if the emotion just written in is the last one in the list same as sentences
-                if (emotions_exists):
+                if emotions_exists:
                     Emotions.end_of_list_check(emotions_gps_match_index)
-                if (sentences_exist):
+                if sentences_exist:
                     Sentences.end_of_list_check(sentence_gps_match_index)
-                if (words_exist):
+                if words_exist:
                     Words.end_of_list_check(words_gps_match_index)
-                if (hrv_exists):
+                if hrv_exists:
                     HRV.end_of_list_check(hrv_gps_match_index)
 
-                
-                
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
 
@@ -604,10 +601,10 @@ def analysis(inputFile, outputFile) -> None:
                 shape_file.positonal_method(feature, layer, row_data)
 
 
-#outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
+outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
 
-#My data path
-#outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
-#Tommy data path
-outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" 
+# My data path
+# outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
+# Tommy data path
+# outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output"
 analysis(inputFile, outputFile)
