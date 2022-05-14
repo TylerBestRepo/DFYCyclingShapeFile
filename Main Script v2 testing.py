@@ -26,31 +26,54 @@ from dataclasses import dataclass, field
 # My mac directories
 inputFile = {
     'sessionID': 'Tyler 5th May',  #
-    # 'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  #
-    'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
+    'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  
 
-    # 'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
-    'emotions': r"E:\UNI\Research_assistant\My test data\May 5th\emotions may 5th.txt",
+    'txt_file': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Ben 14-05-2022.csv",
+    #'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
 
-    # 'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
-    # 'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
+    'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
+    #'emotions': r"E:\UNI\Research_assistant\My test data\May 5th\emotions may 5th.txt",
 
-    'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.csv",
-    'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\word.csv",
+    'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
+    'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
+
+    #'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.csv",
+    #'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\word.csv",
 
     'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': r"E:\UNI\Research_assistant\My test data\May 5th\hrv.csv",
-    # 'empatica_EDA': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/EDA.csv',
-    # Have I written these two empatica things in to be written?
-    # 'empatica_TEMP': '/Users/tylerbest/Desktop/Research Assistant/Test data/Test data 14th April/TEMP.csv'
+    'HRV_path': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/heart rate data Tyler.csv",
+    'empatica_EDA': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/EDA.csv",
+    'empatica_TEMP': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/TEMP.csv", 
     # check code and debug/read through to determine
 }
 
+@dataclass
+class textFile:
+    path: str
+    gps_start: str = ''
+    time_difference: int = 0
+
+    def get_gps_time_sync(self) -> None:
+        with open(self.path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                if row[0] == 'GPS started at':
+                    print(f"GPS recording started at: {row[1]}")
+                    self.gps_start = row[1]
+    
+    def get_time_difference(self, gps_time_created):
+        gps_lies_unix = time.mktime(datetime.strptime(gps_time_created, "%H:%M:%S").timetuple())
+    
+        sync_unix = time.mktime(datetime.strptime(self.gps_start, "%H:%M:%S").timetuple())
+
+        self.time_difference = sync_unix - gps_lies_unix
 
 @dataclass
 class gps:
     gps_path: str
     gps_times: list[str] = field(default_factory=list)
+    time_created: str = field(default_factory=str)
+    time_difference: int = field(default_factory=int)
 
     def gps_time_retrieval(self) -> None:
         # gps_times = []
@@ -65,7 +88,7 @@ class gps:
                     if first_time_index_bool:
                         first_time_index = counter
                         first_time_index_bool = False
-                    time_temp = float(row[4])  # -55
+                    time_temp = float(row[4])  + self.time_difference
                     time_temp = datetime.fromtimestamp(time_temp)
                     time_temp = str(time_temp.strftime('%H:%M:%S'))
                     self.gps_times.append(time_temp)
@@ -88,6 +111,14 @@ class gps:
                 break
         return other_index_match
 
+    def get_time_created(self) -> None:
+        with open(self.gps_path) as bike_gps:
+            gps_reader = csv.reader(bike_gps, delimiter=',')
+            for row in gps_reader:
+                if (row[0] == 'Data' and row[3] == 'time_created'):
+                    unix_time_created = int(row[4])
+                    time_temp = datetime.fromtimestamp(unix_time_created)
+                    self.time_created = str(time_temp.strftime('%H:%M:%S')) 
 
 @dataclass
 class sentences:
@@ -147,7 +178,7 @@ class sentences:
         feature.SetField("Sentence", self.sentences[sentence_gps_match_index])
         feature.SetField("BinSent", 1)
         sentence_gps_match_index += 1
-        return csv_data, sentence_gps_match_index
+        return csv_data, feature, sentence_gps_match_index
 
     def no_sentence_to_save(self, csv_data, feature) -> list:
         csv_data.append("N/A")
@@ -210,7 +241,7 @@ class emotions:
         feature.SetField("Valence", self.valence[emotions_gps_match_index])
         feature.SetField("Arousal", self.arousal[emotions_gps_match_index])
         emotions_gps_match_index += 1
-        return csv_data, emotions_gps_match_index
+        return csv_data, feature, emotions_gps_match_index
 
     def write_unavailable_emotions(self, csv_data, feature) -> list:
         csv_data.append('N/A')
@@ -234,6 +265,7 @@ class Temporary_data:
     altitude: float = None
     position_lat_deg: float = None
     position_long_deg: float = None
+    time_difference: int = field(default_factory=int)
 
     def get_row_data_and_convert(self, row) -> None:
         # x3.6 is to convert from m/s to km/h
@@ -241,7 +273,7 @@ class Temporary_data:
         self.speed = round(speed, 2)
         altitude = float(row[16])
         self.altitude = (round(altitude))
-        time = float(row[4])  # - 55 This is for the common issue of the gps time being out of sync by roughly a minute
+        time = float(row[4])  + self.time_difference
         timestamp = datetime.fromtimestamp(time)
         time_variable = timestamp.strftime('%H:%M:%S')
         self.time = time_variable
@@ -342,7 +374,7 @@ class individual_words:
         feature.SetField("Dictionary", self.times_and_words[words_gps_match_index][1])
         feature.SetField("DictBinary", 1)
         words_gps_match_index += 1
-        return csv_data, words_gps_match_index
+        return csv_data, feature, words_gps_match_index
 
     def no_sentence_to_save(self, csv_data, feature) -> list:
         csv_data.append("N/A")
@@ -354,12 +386,16 @@ class individual_words:
         if (words_gps_match_index != None):
             if ((words_gps_match_index + 1) == self.list_length):
                 self.end_of_list = True
+        #since this one is guaranteed to be called after the other two possibilities im checking for duplicate entries here
+
+        return words_gps_match_index
 
 
 @dataclass
 class hrv:
     path: str
     list_length: int = 0
+    missing_time_counter: int = 0
     end_of_list: bool = False
     heart_rate: list[float] = field(default_factory=list)
     rr_interval: list[float] = field(default_factory=list)
@@ -368,6 +404,7 @@ class hrv:
     def get_hrv_data(self):
         with open(self.path) as hrv:
             hrv_reader = csv.reader(hrv, delimiter=";")
+            first_value = False
             for row in hrv_reader:
                 if not row[0].isalnum():
                     if not row[0] == '':
@@ -386,22 +423,44 @@ class hrv:
                             timestamp = datetime(annoying[0], annoying[1], annoying[2], hours, minutes,
                                                  seconds).strftime('%H:%M:%S')
 
-                            self.times.append(timestamp)
-                            self.heart_rate.append(heart_rate)
-                            self.rr_interval.append(rr_interval)
+                            #Need to check if there are 2 values for 1 time value                            
+                            if (len(self.times) > 0):
+                                if (self.times[-1] != timestamp):
+                                    self.times.append(timestamp)
+                                    self.heart_rate.append(heart_rate)
+                                    self.rr_interval.append(rr_interval)
+                            else:
+                                self.times.append(timestamp)
+                                self.heart_rate.append(heart_rate)
+                                self.rr_interval.append(rr_interval)
 
-                            self.list_length = len(self.times)
-        print("need a breakpoint spot")
+                            
 
+    def list_length_get(self) -> None:
+        self.list_length = len(self.times)                          
+                            
     def write_available_HRV(self, csv_data, feature, hrv_gps_match_index) -> tuple[list, int]:
         csv_data.append(self.heart_rate[hrv_gps_match_index])
         csv_data.append(self.rr_interval[hrv_gps_match_index])
 
         feature.SetField("Heart Rate", self.heart_rate[hrv_gps_match_index])
-        feature.SetField("RR Interval", self.rr_interval[hrv_gps_match_index])
+        feature.SetField("RRInterval", self.rr_interval[hrv_gps_match_index])
 
-        hrv_gps_match_index += 1
-        return csv_data, hrv_gps_match_index
+        # Checking if the next time value is more than 1 second greater than the current one
+        if (hrv_gps_match_index < (self.list_length - 1)):
+            nextTime = self.times[hrv_gps_match_index + 1]
+            nextTimeUnix = time.mktime(datetime.strptime(nextTime, "%H:%M:%S").timetuple())
+            currentTime = self.times[hrv_gps_match_index]
+            currentTimeUnix = time.mktime(datetime.strptime(currentTime, "%H:%M:%S").timetuple())
+
+            if (nextTimeUnix - currentTimeUnix) > 1:
+                self.missing_time_counter += 1
+            else:
+                hrv_gps_match_index += 1
+        else:
+            hrv_gps_match_index += 1
+
+        return csv_data, feature, hrv_gps_match_index
 
     def no_hrv_to_write(self, csv_data, hrv_gps_match_index) -> tuple[list, int]:
         csv_data.append("N/A")
@@ -414,6 +473,121 @@ class hrv:
         if hrv_gps_match_index != None:
             if (hrv_gps_match_index + 1) == self.list_length:
                 self.end_of_list = True
+
+@dataclass
+class empatica:
+    path_temp: str
+    path_eda: str
+    starting_time: str = ''
+    start_time_unix: float = 0
+    list_length: int = 0
+    dividing_number: int = 0
+    end_of_list: bool = False
+    eda: list[float] = field(default_factory=list)
+    temp: list[float] = field(default_factory=list)
+    times: list[str] = field(default_factory=list)
+    # Averaged from 4/sec to 1/sec
+    eda_avg: list[float] = field(default_factory=list)
+    temp_avg: list[float] = field(default_factory=list)
+
+    def eda_extraction(self):
+        eda_data = []
+        skip_first = True
+        with open(self.path_eda) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            counter = 0
+            for row in csv_reader:
+                if (counter == 0):
+                    empatica_start_time = row[0]
+                    empatica_start_time = float(empatica_start_time)
+                    self.start_time_unix = empatica_start_time
+                    timestamp = datetime.fromtimestamp(empatica_start_time)
+                    converted_time = timestamp.strftime('%H:%M:%S')
+                    self.starting_time = converted_time
+                    #print(f"Converted start time = {converted_time}")
+                    #greater than 1 because first data point is the time and second is the sampling rate then a 0 measurement
+                if (counter > 2):
+                    self.eda.append(float(row[0]))
+
+                if counter == 1:
+                    self.dividing_number = float(row[0])
+                counter = counter + 1
+
+    def temperature_extraction(self):
+        counter = 0
+        with open(self.path_temp) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                if (counter > 2):
+                    self.temp.append(float(row[0]))
+                counter = counter + 1
+
+    def time_list_get(self):
+        second = 1
+        plus_time = timedelta(seconds=second)
+        time_temp = datetime.fromtimestamp(self.start_time_unix)
+        
+        start_time_from_string = str(time_temp.strftime('%H:%M:%S'))
+
+        date_time_starting = datetime.strptime(start_time_from_string, '%H:%M:%S')
+        new_time = date_time_starting
+
+        self.times.append(self.starting_time)
+        skip_first = False
+        for y in self.eda_avg:
+            if skip_first:
+                new_time = (new_time + plus_time)
+                converted_new_time = new_time.strftime('%H:%M:%S')
+                self.times.append(converted_new_time)
+            skip_first = True
+        self.list_length = len(self.times)
+
+    def data_averager(self):
+        counter = 0
+        averager_temp = 0
+        averager_eda = 0
+        mini_counter = 0
+        while (counter < len(self.temp)):
+            averager_temp = float(self.temp[counter]) + averager_temp
+            averager_eda = float(self.eda[counter]) + averager_eda
+            mini_counter = mini_counter + 1
+            if (mini_counter == self.dividing_number):
+                averager_temp = averager_temp / self.dividing_number
+                averager_eda = averager_eda / self.dividing_number
+                self.temp_avg.append(averager_temp)
+                self.eda_avg.append(averager_eda)
+                averager_temp = 0
+                averager_eda = 0
+                mini_counter = 0
+            elif (counter == len(self.temp) - 1):
+                averager_temp = averager_temp / mini_counter
+                averager_eda = averager_eda / mini_counter
+                self.temp_avg.append(averager_temp)
+                self.eda_avg.append(averager_eda)
+            counter = counter + 1
+
+    def end_of_list_check(self, empatica_gps_match_index) -> None:
+        if empatica_gps_match_index != None:
+            if (empatica_gps_match_index + 1) == self.list_length:
+                self.end_of_list = True
+
+
+    def write_available_Empatica(self, csv_data, feature, empatica_gps_match_index) -> tuple[list, int]:
+
+        csv_data.append(self.eda_avg[empatica_gps_match_index])
+        csv_data.append(self.temp_avg[empatica_gps_match_index])
+
+        feature.SetField("EDA (us)", self.eda_avg[empatica_gps_match_index])
+        feature.SetField("Temp (C)", self.temp_avg[empatica_gps_match_index])
+
+        empatica_gps_match_index += 1  
+        
+        return csv_data, feature, empatica_gps_match_index
+
+    def no_empatica_to_save(self, csv_data) -> list:
+        csv_data.append("N/A")
+        csv_data.append("N/A")
+        return csv_data
 
 
 def analysis(inputFile, outputFile) -> None:
@@ -445,7 +619,10 @@ def analysis(inputFile, outputFile) -> None:
     layer.CreateField(ogr.FieldDefn("Arousal", ogr.OFTReal))
 
     layer.CreateField(ogr.FieldDefn("Heart Rate", ogr.OFTReal))
-    layer.CreateField(ogr.FieldDefn("RR Interval", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("RRInterval", ogr.OFTReal))
+
+    layer.CreateField(ogr.FieldDefn("EDA (us)", ogr.OFTReal))
+    layer.CreateField(ogr.FieldDefn("Temp (C)", ogr.OFTReal))
 
     sentences_exist = False
     words_exist = False
@@ -458,6 +635,14 @@ def analysis(inputFile, outputFile) -> None:
     # Initiating the GPS class
     GPS = gps(gps_path=inputFile['gps'])
     # Calling method in class to extract times from the csv
+    
+    GPS.get_time_created()
+    if (inputFile['txt_file'] != ''):
+        TextFile = textFile(path=inputFile['txt_file'])
+        TextFile.get_gps_time_sync()
+        TextFile.get_time_difference(GPS.time_created)
+        GPS.time_difference = TextFile.time_difference
+
     GPS.gps_time_retrieval()
     # 2. Initialising audio sentence data
 
@@ -501,8 +686,9 @@ def analysis(inputFile, outputFile) -> None:
     # 4. HRV retrieving
     if (inputFile['HRV_path'] != ''):
         hrv_exists = True
-        HRV = hrv(inputFile['HRV_path'])
+        HRV = hrv(path=inputFile['HRV_path'])
         HRV.get_hrv_data()
+        HRV.list_length_get()
         hrv_gps_match_index = GPS.matching_indexes(HRV.times)
         # check if the indexes exist
         if hrv_gps_match_index is None:
@@ -511,16 +697,29 @@ def analysis(inputFile, outputFile) -> None:
     else:
         hrv_gps_match_index = 0
 
+    # 5. Empatica data extraction
+    if (inputFile['empatica_EDA'] != ''):
+        empatica_exists = True
+        Empatica = empatica(path_temp=inputFile['empatica_TEMP'], path_eda=inputFile['empatica_EDA'])
+        Empatica.eda_extraction()
+        Empatica.temperature_extraction()
+        Empatica.data_averager()
+        Empatica.time_list_get()
+
+        empatica_gps_match_index = GPS.matching_indexes(Empatica.times)
+
+
     data_writer = open(outputFile + '/' + inputFile['sessionID'] + '.csv', 'w', newline='')
     writer = csv.writer(data_writer)
     # csv_titles = ["Time", "Speed(km/h)", "Altitude(m)", "Distance(m)", "Heart Rate(BPM)", "RR Interval(ms)", "Emotions"
     # ,"Valence", "Arousal", "Dictionary Word", "Sentence", "EDA(uS)", "Temperature(Deg C)"]
     csv_titles = ["Time", "speed (km/h)", "Altitude (m)", "Sentence", "Dictionary Word", "Emotion", "Valence",
-                  "Arousal", "Heart Rate", "RR Interval"]
+                  "Arousal", "Heart Rate", "RR Interval", "EDA (us)", "Temp (Deg C)"]
     writer.writerow(csv_titles)
 
     # Temporary row data class initialisation
     row_data = Temporary_data()
+    row_data.time_difference = GPS.time_difference
     shape_file = shape_file_methods()
 
     with open(inputFile['gps']) as csv_file:
@@ -540,7 +739,7 @@ def analysis(inputFile, outputFile) -> None:
                 # Writing in sentence data
                 if sentences_exist and Sentences.end_of_list == False:
                     if row_data.time == Sentences.sentence_start_time[sentence_gps_match_index]:
-                        csv_data, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature,
+                        csv_data, feature, sentence_gps_match_index = Sentences.save_sentences_csv_shape(csv_data, feature,
                                                                                                 sentence_gps_match_index)
                     else:
                         # If there is no sentence to write
@@ -551,7 +750,7 @@ def analysis(inputFile, outputFile) -> None:
                 # GOTTA FINISH WRITING IN THIS ONE, PROLLY ONLY 60% DONE
                 if words_exist and words_gps_match_index != None:
                     if row_data.time == Words.times[words_gps_match_index]:
-                        csv_data, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature,
+                        csv_data, feature, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature,
                                                                                          words_gps_match_index)
                     else:
                         csv_data, feature = Words.no_sentence_to_save(csv_data, feature)
@@ -565,7 +764,7 @@ def analysis(inputFile, outputFile) -> None:
                 # In case a file isn't provided this check is created to prevent bugs
                 if emotions_exists and Emotions.end_of_list == False:
                     if row_data.time == Emotions.times[emotions_gps_match_index]:
-                        csv_data, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature,
+                        csv_data, feature, emotions_gps_match_index = Emotions.write_available_emotions(csv_data, feature,
                                                                                                emotions_gps_match_index)
                     else:
                         # might not need this else at all now
@@ -575,12 +774,21 @@ def analysis(inputFile, outputFile) -> None:
 
                 if hrv_exists and HRV.end_of_list == False:
                     if row_data.time == HRV.times[hrv_gps_match_index]:
-                        csv_data, hrv_gps_match_index = HRV.write_available_HRV(csv_data, feature, hrv_gps_match_index)
+                        csv_data, feature, hrv_gps_match_index = HRV.write_available_HRV(csv_data, feature, hrv_gps_match_index)
                     else:
                         # might not need this else at all now
                         csv_data, hrv_gps_match_index = HRV.no_hrv_to_write(csv_data, hrv_gps_match_index)
                 else:
                     # HRV file doesnt exist if this is entered
+                    csv_data.append("N/A")
+                    csv_data.append("N/A")
+
+                if empatica_exists and Empatica.end_of_list == False:
+                    if row_data.time == Empatica.times[empatica_gps_match_index]:
+                        csv_data, feature, empatica_gps_match_index = Empatica.write_available_Empatica(csv_data, feature, empatica_gps_match_index)
+                    else:
+                        csv_data = Empatica.no_empatica_to_save(csv_data)
+                else:
                     csv_data.append("N/A")
                     csv_data.append("N/A")
 
@@ -593,6 +801,8 @@ def analysis(inputFile, outputFile) -> None:
                     Words.end_of_list_check(words_gps_match_index)
                 if hrv_exists:
                     HRV.end_of_list_check(hrv_gps_match_index)
+                if empatica_exists:
+                    Empatica.end_of_list_check(empatica_gps_match_index)
 
                 # Writing info to the CSV file and writing the coordinates to the shape file
                 writer.writerow(csv_data)
@@ -601,10 +811,10 @@ def analysis(inputFile, outputFile) -> None:
                 shape_file.positonal_method(feature, layer, row_data)
 
 
-outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
+#outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
 
 # My data path
 # outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
 # Tommy data path
-# outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output"
+outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output"
 analysis(inputFile, outputFile)
