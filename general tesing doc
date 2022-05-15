@@ -1,0 +1,29 @@
+import csv
+import os
+
+import osgeo
+import osgeo.ogr as ogr
+import osgeo.osr as osr
+from datetime import datetime, timedelta
+import time
+import sys
+import json
+import string
+from dataclasses import dataclass, field
+
+from datetime import datetime
+
+date_string = '14-05-2022'
+
+print(len(date_string))
+
+time_string = '11:12:51'
+
+print(len(time_string))
+
+datetime_object = datetime.strptime(date_string + ' ' + time_string, '%d-%m-%Y %H:%M:%S')
+
+print(datetime_object)
+
+
+

@@ -1,0 +1,35 @@
+import csv
+import os
+
+import osgeo
+import osgeo.ogr as ogr
+import osgeo.osr as osr
+from datetime import datetime, timedelta
+import time
+import sys
+import json
+import string
+from dataclasses import dataclass, field
+
+phone_app_text_path = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Ben 14-05-2022 copy.csv"
+
+start_time_mock = "11:12:59"
+
+
+
+with open(phone_app_text_path) as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader:
+        if row[0] == 'GPS started at':
+            print(f"GPS recording started at: {row[1]}")
+            gps_start = row[1]
+
+    gps_lies_unix = time.mktime(datetime.strptime(start_time_mock, "%H:%M:%S").timetuple())
+    
+    sync_unix = time.mktime(datetime.strptime(gps_start, "%H:%M:%S").timetuple())
+
+    diff_between_real_and_gps_lies = sync_unix - gps_lies_unix
+
+    print(f"The difference between real and fake time is: {diff_between_real_and_gps_lies}")
+    # -16 means that we can just + that number onto the gps times as they are read i reckon. or can subtract with
+    # the inverse operation to find the difference

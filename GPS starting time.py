@@ -54,14 +54,14 @@ class gps:
         return gps_index_match, other_index_match
 
 
-path = r"E:\UNI\Research_assistant\My test data\May 5th\2022-05-05-075456-ELEMNT BOLT 28D4-6-0.csv"
+path = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/2022-05-05-075456-ELEMNT BOLT 28D4-6-0.csv"
 
 
 def main() -> None:
     GPS = gps(gps_path=path)
     GPS.gps_time_retrieval()
     gps_times = GPS.gps_times
-    print(f"The first time is: {gps_times[0]}")
+    print(f"\nThe first time is: {gps_times[0]}\n")
 
 
 main()
