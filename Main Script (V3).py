@@ -26,7 +26,7 @@ inputFile = {
     'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  
     #'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
 
-    'txt_file': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Ben 14-05-2022.csv",
+    'txt_file': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler 14-05-2022.csv",
 
 
 
@@ -59,7 +59,7 @@ class textFile:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for row in csv_reader:
                 if row[0] == 'GPS started at':
-                    print(f"GPS recording started at: {row[1]}")
+                    #print(f"GPS recording started at: {row[1]}")
                     self.gps_start = row[1]
     
     def get_audio_time_sync(self) -> datetime:
@@ -609,6 +609,9 @@ class empatica:
 def analysis(inputFile, outputFile) -> None:
     """Main function here"""
 
+    start = time.perf_counter()
+    time.sleep(1)
+
     """Initialising all of the mapping necessities here"""
     driver = ogr.GetDriverByName("ESRI Shapefile")
     data_source = driver.CreateDataSource(outputFile)
@@ -830,6 +833,10 @@ def analysis(inputFile, outputFile) -> None:
 
                 # do shapefile positional things
                 shape_file.positonal_method(feature, layer, row_data)
+    
+    # Curious to see how long it takes to run
+    end = time.perf_counter()
+    print(f"\nTakes: {end-start}s to run\n")
 
 
 #outputFile = r"E:\UNI\Research_assistant\My test data\May 5th\output"  # windows path
