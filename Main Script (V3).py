@@ -22,28 +22,28 @@ from dataclasses import dataclass, field
 # }
 # My mac directories
 inputFile = {
-    'sessionID': 'Tyler 5th May',  #
-    'gps': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler May 5th.csv",  
+    'sessionID': 'Liz  on the 26th May',  #
+    'gps': "/Volumes/One Touch/Participant data/Liz/GPS 26th May.csv",  
     #'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
 
-    'txt_file': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler 14-05-2022.csv",
+    'txt_file': "/Volumes/One Touch/Participant data/Liz/Liz 26-05-2022.txt",
 
 
 
 
-    'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/emotions may 5th.txt",
+    'emotions':  "/Volumes/One Touch/Participant data/Liz/dominant_emotions.txt",
     #'emotions': r"E:\UNI\Research_assistant\My test data\May 5th\emotions may 5th.txt",
 
-    'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/audio-20220505-175454.csv",
-    'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/Tyler Words.csv",
+    'audio_sentences': "/Volumes/One Touch/Participant data/Liz/transcript_sentences.csv",
+    'audio_words': "/Volumes/One Touch/Participant data/Liz/transcript.csv",
 
     #'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.csv",
     #'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\word.csv",
 
     'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/heart rate data Tyler.csv",
-    'empatica_EDA': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/EDA.csv",
-    'empatica_TEMP': "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/TEMP.csv", 
+    'HRV_path': "/Volumes/One Touch/Participant data/Liz/HRV.csv",
+    'empatica_EDA': "/Volumes/One Touch/Participant data/Liz/EDA.csv",
+    'empatica_TEMP': "/Volumes/One Touch/Participant data/Liz/TEMP.csv", 
     # check code and debug/read through to determine
 }
 
@@ -69,7 +69,7 @@ class textFile:
             for row in csv_reader:
                 if row[0] == 'Date of ride':
                     type_test = row[1]
-                    print(f"Date found at: {row[1]} and the type is: {type(type_test)}")
+                    print(f"Date found at: {row[1]}")
                     date_of_ride = str(row[1])
                     date_of_ride = date_of_ride.strip()
 
@@ -391,7 +391,7 @@ class individual_words:
         words_gps_match_index += 1
         return csv_data, feature, words_gps_match_index
 
-    def no_sentence_to_save(self, csv_data, feature) -> list:
+    def no_dict_words_to_save(self, csv_data, feature) -> list:
         csv_data.append("N/A")
         feature.SetField("Dictionary", "N/A")
         feature.SetField("DictBinary", 0)
@@ -670,10 +670,10 @@ def analysis(inputFile, outputFile) -> None:
     if inputFile['audio_sentences'] != '':
         sentences_exist = True
         Sentences.saving_sentence_data()
-        Sentences.audio_start_time_from_path()
+        #Sentences.audio_start_time_from_path()
         #using alternative method of getting the time from the txt, same way the gps does
         """Uncomment this one when the participants are guaranteed to have the phone update that outputs 24 hour time"""
-        #Sentences.audio_start_time = TextFile.get_audio_time_sync()
+        Sentences.audio_start_time = TextFile.get_audio_time_sync()
         Sentences.sentences_start_time_conversion()
         # Getting the indexes for where the sentences and gps times line up
         sentence_gps_match_index = GPS.matching_indexes(Sentences.sentence_start_time)
@@ -772,12 +772,13 @@ def analysis(inputFile, outputFile) -> None:
                     csv_data = Sentences.no_sentence_to_save(csv_data, feature)
 
                 # GOTTA FINISH WRITING IN THIS ONE, PROLLY ONLY 60% DONE
-                if words_exist and words_gps_match_index != None and words_gps_match_index != None:
+                if words_exist and Words.end_of_list == False and words_gps_match_index != None:
                     if row_data.time == Words.times[words_gps_match_index]:
                         csv_data, feature, words_gps_match_index = Words.save_dictWords_csv_shape(csv_data, feature,
                                                                                          words_gps_match_index)
                     else:
-                        csv_data, feature = Words.no_sentence_to_save(csv_data, feature)
+                        # Is the words specifically for dictionary words
+                        csv_data = Words.no_dict_words_to_save(csv_data, feature)
                 else:
                     # Would call same method from words class but that classes creation is dependant on the words file existing
                     csv_data.append("N/A")
@@ -844,5 +845,5 @@ def analysis(inputFile, outputFile) -> None:
 # My data path
 # outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
 # Tommy data path
-outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output"
+outputFile = "/Volumes/One Touch/Participant data/Liz/output"
 analysis(inputFile, outputFile)
