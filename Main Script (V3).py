@@ -23,27 +23,24 @@ from dataclasses import dataclass, field
 # My mac directories
 inputFile = {
     'sessionID': 'Liz  on the 26th May',  #
-    'gps': "/Volumes/One Touch/Participant data/Liz/GPS 26th May.csv",  
+    'gps': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/May 17th GPS.csv",  
     #'gps': r"E:\UNI\Research_assistant\My test data\May 5th\Tyler May 5th.csv",
 
-    'txt_file': "/Volumes/One Touch/Participant data/Liz/Liz 26-05-2022.txt",
+    'txt_file': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/Liz 17-05-2022.txt",
 
-
-
-
-    'emotions':  "/Volumes/One Touch/Participant data/Liz/dominant_emotions.txt",
+    'emotions':  "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/dominant_emotions.txt",
     #'emotions': r"E:\UNI\Research_assistant\My test data\May 5th\emotions may 5th.txt",
 
-    'audio_sentences': "/Volumes/One Touch/Participant data/Liz/transcript_sentences.csv",
-    'audio_words': "/Volumes/One Touch/Participant data/Liz/transcript.csv",
+    'audio_sentences': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/transcript_sentences.csv",
+    'audio_words': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/transcript.csv",
 
     #'audio_sentences': r"E:\UNI\Research_assistant\My test data\May 5th\audio-20220505-175454.csv",
     #'audio_words': r"E:\UNI\Research_assistant\My test data\May 5th\word.csv",
 
     'dictionary_path': r'Dictionary.txt',  # This path will be a constant #
-    'HRV_path': "/Volumes/One Touch/Participant data/Liz/HRV.csv",
-    'empatica_EDA': "/Volumes/One Touch/Participant data/Liz/EDA.csv",
-    'empatica_TEMP': "/Volumes/One Touch/Participant data/Liz/TEMP.csv", 
+    'HRV_path': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/HRV.csv",
+    'empatica_EDA': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/EDA.csv",
+    'empatica_TEMP': "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/TEMP.csv", 
     # check code and debug/read through to determine
 }
 
@@ -563,7 +560,8 @@ class empatica:
         averager_temp = 0
         averager_eda = 0
         mini_counter = 0
-        while (counter < len(self.temp)):
+        print(f"The length of temp is: {len(self.temp)}/nLength of EDA is: {len(self.eda)}")
+        while (counter < len(self.temp) and counter < len(self.eda)):
             averager_temp = float(self.temp[counter]) + averager_temp
             averager_eda = float(self.eda[counter]) + averager_eda
             mini_counter = mini_counter + 1
@@ -845,5 +843,5 @@ def analysis(inputFile, outputFile) -> None:
 # My data path
 # outputFile = "/Users/tylerbest/Desktop/Research Assistant/Test data/May 5th Tyler/output" # MAC pathname
 # Tommy data path
-outputFile = "/Volumes/One Touch/Participant data/Liz/output"
+outputFile = "/Users/tylerbest/Desktop/Research Assistant/Participant Data/Liz/17th May/output"
 analysis(inputFile, outputFile)
